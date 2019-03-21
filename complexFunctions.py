@@ -1,15 +1,10 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Created on Wed Mar 20 19:35:11 2019
 
 @author: spopoff
 """
 
-
 from torch.nn.functional import relu, max_pool2d
-
-#%%
 
 
 
