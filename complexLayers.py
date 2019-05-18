@@ -9,15 +9,10 @@ Created on Tue Mar 19 10:30:02 2019
 Based on https://openreview.net/forum?id=H1T2hmZAb
 """
 
-#%%
 import torch
 from torch.nn import Module, Parameter, init, Sequential
 from torch.nn import Conv2d, Linear, BatchNorm1d, BatchNorm2d
 from complexFunctions import complex_relu, complex_max_pool
-#from torch.autograd import Function
-#from torch.nn.functional import relu, max_pool2d
-
-#%%
 
 class ComplexSequential(Sequential):
     def forward(self, input_r, input_t):
@@ -147,8 +142,6 @@ class ComplexBatchNorm2D(_ComplexBatchNorm):
     def forward(self, input_r, input_i):
         assert(input_r.size() == input_i.size())
         assert(len(input_r.shape) == 4)
-        #self._check_input_dim(input)
-
         exponential_average_factor = 0.0
         
 
@@ -160,25 +153,13 @@ class ComplexBatchNorm2D(_ComplexBatchNorm):
                 else:  # use exponential moving average
                     exponential_average_factor = self.momentum
 
-        # calculate running estimates
-
-#        n_dim = len(input_r.shape)
-        # should be 1d or 2d data
-#        assert(n_dim in [2,4])
-#        C = self.num_features
-        
-        
+       
         if self.training:
              
             # calculate mean of real and imaginary part
-            # works for 2d 
             mean_r = input_r.mean([0, 2, 3])
             mean_i = input_i.mean([0, 2, 3])
-            
-            # the following expression works for 1d or 2d NOOOO it does not
-#            mean_r = input_r.transpose(1,0).contiguous().view(C,-1).mean(dim=-1)
-#            mean_i = input_i.transpose(1,0).contiguous().view(C,-1).mean(dim=-1)
-            
+      
 
             mean = torch.stack((mean_r,mean_i),dim=1)
             
@@ -186,22 +167,14 @@ class ComplexBatchNorm2D(_ComplexBatchNorm):
             self.running_mean = exponential_average_factor * mean\
                 + (1 - exponential_average_factor) * self.running_mean
             
-            # works for 2d 
             input_r = input_r-mean_r[None, :, None, None]
             input_i = input_i-mean_i[None, :, None, None]          
-            
-            # works for 1d or 2d
-#            input_r = input_r-mean_r[(None,)*(n_dim-1)].transpose(-1,1)
-#            input_i = input_i-mean_i[(None,)*(n_dim-1)].transpose(-1,1)  
-
         
             # Elements of the covariance matrix (biased for train)
             n = input_r.numel() / input_r.size(1)
-#            dims = [0]+[i for i in range(2,n_dim)]
             Crr = 1./n*input_r.pow(2).sum(dim=[0,2,3])+self.eps
             Cii = 1./n*input_i.pow(2).sum(dim=[0,2,3])+self.eps
             Cri = (input_r.mul(input_i)).mean(dim=[0,2,3])
-#            Cri = 1./n*input_r.mul(input_i).sum(dim=[0,2,3])#+self.eps
 
             self.running_covar[:,0] = exponential_average_factor * Crr * n / (n - 1)\
                 + (1 - exponential_average_factor) * self.running_covar[:,0]
@@ -217,62 +190,27 @@ class ComplexBatchNorm2D(_ComplexBatchNorm):
             Crr = self.running_covar[:,0]+self.eps
             Cii = self.running_covar[:,1]+self.eps
             Cri = self.running_covar[:,2]#+self.eps
-            # works for 2d 
+
             input_r = input_r-mean[None,:,0,None,None]
             input_i = input_i-mean[None,:,1,None,None]
-            # works for 1d or 2d
-#            input_r = input_r-mean[:,0][(None,)*(n_dim-1)].transpose(-1,1)
-#            input_i = input_i-mean[:,1][(None,)*(n_dim-1)].transpose(-1,1)
-
-        
-
-            
-        # caclualte the inverse square root the covariance matrix
+                 
+        # calculate the inverse square root the covariance matrix
         det = Crr*Cii-Cri.pow(2)
-#        odet = 1./(det)
-#        osqrdet = 1./(torch.sqrt(det))#+self.eps
-#        tsq = (Cii+Crr)*odet+2.*osqrdet
-#        frac = 1./torch.sqrt(tsq)
-#        Rrr = frac*(Cii*odet+1.*osqrdet)
-#        Rii = frac*(Crr*odet+1.*osqrdet)
-#        Rri = -1.*frac*Cri*odet
         s = torch.sqrt(det)
         t = torch.sqrt(Cii+Crr + 2 * s)
         inverse_st = 1.0 / (s * t)
         Rrr = (Cii + s) * inverse_st
         Rii = (Crr + s) * inverse_st
         Rri = -Cri * inverse_st
-        
-#        if (n_dim == 2):
-#            print(f"Crr = {Crr}")
-#            print(f"Cii = {Cri}")
-#            print(f"Rrr = {Rrr}")
-#            print(f"Rri = {Rri}")
-        # works for 2d           
+                
         input_r, input_i = Rrr[None,:,None,None]*input_r+Rri[None,:,None,None]*input_i, \
                            Rii[None,:,None,None]*input_i+Rri[None,:,None,None]*input_r
-        # works for 1d or 2d
-#        input_r, input_i = Rrr[(None,)*(n_dim-1)].transpose(-1,1)*input_r+\
-#                           Rri[(None,)*(n_dim-1)].transpose(-1,1)*input_i, \
-#                           Rii[(None,)*(n_dim-1)].transpose(-1,1)*input_i+\
-#                           Rri[(None,)*(n_dim-1)].transpose(-1,1)*input_r
-#        
-#        print(f"1/input_r = {input_r}")
+
         if self.affine:
-            # works for 2d
             input_r, input_i = self.weight[None,:,0,None,None]*input_r+self.weight[None,:,2,None,None]*input_i+\
                                self.bias[None,:,0,None,None], \
                                self.weight[None,:,2,None,None]*input_r+self.weight[None,:,1,None,None]*input_i+\
                                self.bias[None,:,1,None,None]
-            # works for 1d and 2d
-#            input_r, input_i = self.weight[:,0][(None,)*(n_dim-1)].transpose(-1,1)*input_r+\
-#                               self.weight[:,2][(None,)*(n_dim-1)].transpose(-1,1)*input_i+\
-#                               self.bias[:,0][(None,)*(n_dim-1)].transpose(-1,1), \
-#                               self.weight[:,2][(None,)*(n_dim-1)].transpose(-1,1)*input_r+\
-#                               self.weight[:,1][(None,)*(n_dim-1)].transpose(-1,1)*input_i+\
-#                               self.bias[:,1][(None,)*(n_dim-1)].transpose(-1,1)
-                               
-#        print(f"2/input_r = {input_r}")
 
         return input_r, input_i
      
@@ -300,8 +238,6 @@ class ComplexBatchNorm1D(_ComplexBatchNorm):
             # calculate mean of real and imaginary part
             mean_r = input_r.mean(dim=0)
             mean_i = input_i.mean(dim=0)
-            
-            
             mean = torch.stack((mean_r,mean_i),dim=1)
             
             # update running mean
@@ -318,7 +254,6 @@ class ComplexBatchNorm1D(_ComplexBatchNorm):
             Crr = input_r.var(dim=0,unbiased=False)+self.eps
             Cii = input_i.var(dim=0,unbiased=False)+self.eps
             Cri = (input_r.mul(input_i)).mean(dim=0)
-#            Cri = 1./n*input_r.mul(input_i).sum(dim=0)#+self.eps
 
             self.running_covar[:,0] = exponential_average_factor * Crr * n / (n - 1)\
                 + (1 - exponential_average_factor) * self.running_covar[:,0]
@@ -337,12 +272,8 @@ class ComplexBatchNorm1D(_ComplexBatchNorm):
             # zero mean values 
             input_r = input_r-mean[None,:,0]
             input_i = input_i-mean[None,:,1]
-
-
-        
-
             
-        # caclualte the inverse square root the covariance matrix
+        # calculate the inverse square root the covariance matrix
         det = Crr*Cii-Cri.pow(2)
         s = torch.sqrt(det)
         t = torch.sqrt(Cii+Crr + 2 * s)
@@ -351,12 +282,6 @@ class ComplexBatchNorm1D(_ComplexBatchNorm):
         Rii = (Crr + s) * inverse_st
         Rri = -Cri * inverse_st
         
-#        if (n_dim == 2):
-#            print(f"Crr = {Crr}")
-#            print(f"Cii = {Cri}")
-#            print(f"Rrr = {Rrr}")
-#            print(f"Rri = {Rri}")
-#        input_r, input_i = Rrr[None,:]*input_r, Rii[None,:]*input_i
         input_r, input_i = Rrr[None,:]*input_r+Rri[None,:]*input_i, \
                            Rii[None,:]*input_i+Rri[None,:]*input_r
 
@@ -368,3 +293,4 @@ class ComplexBatchNorm1D(_ComplexBatchNorm):
 
         del Crr, Cri, Cii, Rrr, Rii, Rri, det, s, t
         return input_r, input_i
+
