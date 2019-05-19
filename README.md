@@ -2,12 +2,16 @@
 
 A high-level toolbox for using complex valued neural networks in PyTorch.
 
+# complexPyTorch
+
+A high-level toolbox for using complex valued neural networks in PyTorch.
+
 ## Complex Valued Networks with PyTorch
 
-Artificial neural networks are mainly used for treating data encoded in real values, such as numerized images or sounds. 
-In such systems, using complex valued tensor would be quite useless. 
+Artificial neural networks are mainly used for treating data encoded in real values, such as digitized images or sounds. 
+In such systems, using complex-valued tensor would be quite useless. 
 However, for physic related topics, in particular when dealing with wave propagation, using complex values is interesting as the physics typically has linear, hence more simple, behavior when considering complex fields. 
-complexPyTorch is a simple implementation of complex valued functions and modules using the high-level API of PyTorch. 
+complexPyTorch is a simple implementation of complex-valued functions and modules using the high-level API of PyTorch. 
 Following [[C. Trabelsi et al., International Conference on Learning Representations, (2018)](https://openreview.net/forum?id=H1T2hmZAb)], it allows the following layers and functions to be used with complex values:
 * Linear
 * Conv2d
@@ -18,19 +22,19 @@ Following [[C. Trabelsi et al., International Conference on Learning Representat
 
 
 
-## Synthax and usage
+## Syntax and usage
 
-The synthax is supposed to copy the one of the standard real functions and modules from PyTorch. 
+The syntax is supposed to copy the one of the standard real functions and modules from PyTorch. 
 The names are the same as in `nn.modules` and `nn.functional` except that they start with `Complex` for Modules, e.g. `ComplexRelu`, `ComplexMaxPool2d` or `complex_` for functions, e.g. `complex_relu`, `complex_max_pool2d`.
-The only usage difference is that the forward fuction takes two tensors, corresponding to real and imaginary parts, and returns two ones too.
+The only usage difference is that the forward function takes two tensors, corresponding to real and imaginary parts, and returns two ones too.
 
 ## BatchNorm
 
-For all other layers, using the recommendation of [[C. Trabelsi et al., International Conference on Learning Representations, (2018)](https://openreview.net/forum?id=H1T2hmZAb)], the claculation can be done in a straighforward manner using functions and modules form `nn.modules` and `nn.functional`. 
-For instance, the function `complex_relu` in `complexFunctions`, or its associated module `ComplexRelu` in `complexLayers`, simply performs `relu` both on the real and imagary part and returns the two tensors.
-The complex BatchNorm proposed in [[C. Trabelsi et al., International Conference on Learning Representations, (2018)](https://openreview.net/forum?id=H1T2hmZAb)] requires the claulcation of the inverse square root of the covariance matrix.
+For all other layers, using the recommendation of [[C. Trabelsi et al., International Conference on Learning Representations, (2018)](https://openreview.net/forum?id=H1T2hmZAb)], the calculation can be done in a straightforward manner using functions and modules form `nn.modules` and `nn.functional`. 
+For instance, the function `complex_relu` in `complexFunctions`, or its associated module `ComplexRelu` in `complexLayers`, simply performs `relu` both on the real and imaginary part and returns the two tensors.
+The complex BatchNorm proposed in [[C. Trabelsi et al., International Conference on Learning Representations, (2018)](https://openreview.net/forum?id=H1T2hmZAb)] requires the calculation of the inverse square root of the covariance matrix.
 This is implemented in `ComplexbatchNorm1D` and `ComplexbatchNorm2D` but using the high-level PyTorch API, which is quite slow.
-The gain of using this approach, however, can be experimentally marginal compared to the naive approach which consist in simply performing the BatchNorm on both thre real and imaginary part, which is available using `NaiveComplexbatchNorm1D` or `NaiveComplexbatchNorm2D`.
+The gain of using this approach, however, can be experimentally marginal compared to the naive approach which consists in simply performing the BatchNorm on both the real and imaginary part, which is available using `NaiveComplexbatchNorm1D` or `NaiveComplexbatchNorm2D`.
 
 
 ## Example
