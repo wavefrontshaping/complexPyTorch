@@ -10,7 +10,7 @@ However, for physic related topics, in particular when dealing with wave propaga
 complexPyTorch is a simple implementation of complex valued functions and modules using the high-level API of PyTorch. 
 Following [[C. Trabelsi et al., International Conference on Learning Representations, (2018)](https://openreview.net/forum?id=H1T2hmZAb)], it allows the following layers and functions to be used with complex values:
 * Linear
-* Conv2D
+* Conv2d
 * MaxPool2d
 * Relu (&#8450;Relu)
 * BatchNorm1d (Naive and Covariance approach)
@@ -21,7 +21,7 @@ Following [[C. Trabelsi et al., International Conference on Learning Representat
 ## Synthax and usage
 
 The synthax is supposed to copy the one of the standard real functions and modules from PyTorch. 
-The names are the same as in `nn.modules` and `nn.functional` except that they start with `Complex` for Modules, e.g. `ComplexRelu`, `ComplexMaxPool2D` or `complex_` for functions, e.g. `complex_relu`, `complex_max_pool2d`.
+The names are the same as in `nn.modules` and `nn.functional` except that they start with `Complex` for Modules, e.g. `ComplexRelu`, `ComplexMaxPool2d` or `complex_` for functions, e.g. `complex_relu`, `complex_max_pool2d`.
 The only usage difference is that the forward fuction takes two tensors, corresponding to real and imaginary parts, and returns two ones too.
 
 ## BatchNorm
