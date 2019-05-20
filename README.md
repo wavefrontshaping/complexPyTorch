@@ -83,10 +83,11 @@ class ComplexNet(nn.Module):
         xr,xi = self.fc1(xr,xi)
         xr,xi = complex_relu(xr,xi)
         xr,xi = self.fc2(xr,xi)
+        # take the absolute value as output
         x = torch.sqrt(torch.pow(xr,2)+torch.pow(xi,2))
         return F.log_softmax(x, dim=1)
     
-device = torch.device("cuda:3" )
+device = torch.device("cuda:0" )
 model = ComplexNet().to(device)
 optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
