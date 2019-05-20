@@ -109,7 +109,7 @@ def train(model, device, train_loader, optimizer, epoch):
                 loss.item())
             )
 
-# Run trainong on 50 epochs
+# Run training on 50 epochs
 for epoch in range(50):
     train(model, device, train_loader, optimizer, epoch)
 ```
