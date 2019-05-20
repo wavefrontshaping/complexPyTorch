@@ -2,10 +2,6 @@
 
 A high-level toolbox for using complex valued neural networks in PyTorch.
 
-# complexPyTorch
-
-A high-level toolbox for using complex valued neural networks in PyTorch.
-
 ## Complex Valued Networks with PyTorch
 
 Artificial neural networks are mainly used for treating data encoded in real values, such as digitized images or sounds. 
@@ -122,4 +118,4 @@ for epoch in range(50):
 
 ## Acknowledgments
 
-I want to thank Piotr Bialecki for his invluable help on the PyTorch forum.
+I want to thank Piotr Bialecki for his invaluable help on the PyTorch forum.
