@@ -119,3 +119,7 @@ for epoch in range(50):
         
 ## Todo
 * Script ComplexBatchNorm for improved efficiency ([jit doc](https://pytorch.org/docs/stable/jit.html))
+
+## Acknowledgments
+
+I want to thank Piotr Bialecki for his invluable help on the PyTorch forum.
