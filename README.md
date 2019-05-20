@@ -116,6 +116,8 @@ for epoch in range(50):
         
 ## Todo
 * Script ComplexBatchNorm for improved efficiency ([jit doc](https://pytorch.org/docs/stable/jit.html))
+* Add more layers (Conv1D, Upsample, ConvTranspose...)
+* Add complex cost functions and usual functions (e.g. Pearson correlation)
 
 ## Acknowledgments
 
