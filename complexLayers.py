@@ -13,12 +13,31 @@ import torch
 from torch.nn import Module, Parameter, init, Sequential
 from torch.nn import Conv2d, Linear, BatchNorm1d, BatchNorm2d
 from complexFunctions import complex_relu, complex_max_pool2d
+from complexFunctions complex_dropout, complex_dropout2d
 
 class ComplexSequential(Sequential):
     def forward(self, input_r, input_t):
         for module in self._modules.values():
             input_r, input_t = module(input_r, input_t)
         return input_r, input_t
+
+class ComplexDropout(Module):
+    def __init__(self,p=0.5, inplace=False):
+        super(ComplexDropout).__init__()
+        self.p = p
+        self.inplace = inplace
+
+    def forward(self,input_r,input_i):
+        return complex_dropout(input_r,input_i,self.p,self.inplace)
+
+class ComplexDropout2d(Module):
+    def __init__(self,p=0.5, inplace=False):
+        super(ComplexDropout2d).__init__()
+        self.p = p
+        self.inplace = inplace
+
+    def forward(self,input_r,input_i):
+        return complex_dropout2d(input_r,input_i,self.p,self.inplace)
 
 class ComplexMaxPool2d(Module):
     
