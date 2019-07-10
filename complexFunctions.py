@@ -2,20 +2,12 @@
 # -*- coding: utf-8 -*-
 
 """
-Created on Wed Mar 20 19:35:11 2019
-
 @author: spopoff
 """
 
-
 from torch.nn.functional import relu, max_pool2d, dropout, dropout2d
 
-
-
-
-
 def complex_relu(input_r,input_i):
-#    assert(input_r.size() == input_i.size())
     return relu(input_r), relu(input_i)
 
 def complex_max_pool2d(input_r,input_i,kernel_size, stride=None, padding=0,
