@@ -13,7 +13,7 @@ import torch
 from torch.nn import Module, Parameter, init, Sequential
 from torch.nn import Conv2d, Linear, BatchNorm1d, BatchNorm2d
 from complexFunctions import complex_relu, complex_max_pool2d
-from complexFunctions complex_dropout, complex_dropout2d
+from complexFunctions import complex_dropout, complex_dropout2d
 
 class ComplexSequential(Sequential):
     def forward(self, input_r, input_t):
