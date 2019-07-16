@@ -23,7 +23,7 @@ class ComplexSequential(Sequential):
 
 class ComplexDropout(Module):
     def __init__(self,p=0.5, inplace=False):
-        super(ComplexDropout).__init__()
+        super(ComplexDropout,self).__init__()
         self.p = p
         self.inplace = inplace
 
@@ -32,7 +32,7 @@ class ComplexDropout(Module):
 
 class ComplexDropout2d(Module):
     def __init__(self,p=0.5, inplace=False):
-        super(ComplexDropout2d).__init__()
+        super(ComplexDropout2d,self).__init__()
         self.p = p
         self.inplace = inplace
 
