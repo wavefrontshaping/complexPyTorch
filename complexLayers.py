@@ -207,24 +207,24 @@ class ComplexBatchNorm2d(_ComplexBatchNorm):
         if self.training:
 
             # calculate mean of real and imaginary part
-            mean_r = input_r.mean([0, 2, 3])
-            mean_i = input_i.mean([0, 2, 3])
+            mean_r = input_r.mean([0, 2, 3]).detach()
+            mean_i = input_i.mean([0, 2, 3]).detach()
 
 
-            mean = torch.stack((mean_r,mean_i),dim=1)
+            mean = torch.stack((mean_r,mean_i),dim=1).detach()
 
             # update running mean
             self.running_mean = exponential_average_factor * mean\
                 + (1 - exponential_average_factor) * self.running_mean
-
+            
             input_r = input_r-mean_r[None, :, None, None]
             input_i = input_i-mean_i[None, :, None, None]
 
             # Elements of the covariance matrix (biased for train)
             n = input_r.numel() / input_r.size(1)
-            Crr = 1./n*input_r.pow(2).sum(dim=[0,2,3])+self.eps
-            Cii = 1./n*input_i.pow(2).sum(dim=[0,2,3])+self.eps
-            Cri = (input_r.mul(input_i)).mean(dim=[0,2,3])
+            Crr = (1./n*input_r.pow(2).sum(dim=[0,2,3])+self.eps).detach()
+            Cii = (1./n*input_i.pow(2).sum(dim=[0,2,3])+self.eps).detach()
+            Cri = ((input_r.mul(input_i)).mean(dim=[0,2,3])).detach()
 
             self.running_covar[:,0] = exponential_average_factor * Crr * n / (n - 1)\
                 + (1 - exponential_average_factor) * self.running_covar[:,0]
@@ -237,9 +237,9 @@ class ComplexBatchNorm2d(_ComplexBatchNorm):
 
         else:
             mean = self.running_mean
-            Crr = self.running_covar[:,0]+self.eps
-            Cii = self.running_covar[:,1]+self.eps
-            Cri = self.running_covar[:,2]#+self.eps
+            Crr = (self.running_covar[:,0]+self.eps).detach()
+            Cii = (self.running_covar[:,1]+self.eps).detach()
+            Cri = (self.running_covar[:,2]).detach()#+self.eps
 
             input_r = input_r-mean[None,:,0,None,None]
             input_i = input_i-mean[None,:,1,None,None]
