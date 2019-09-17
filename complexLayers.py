@@ -214,8 +214,9 @@ class ComplexBatchNorm2d(_ComplexBatchNorm):
             mean = torch.stack((mean_r,mean_i),dim=1)
 
             # update running mean
-            self.running_mean = exponential_average_factor * mean\
-                + (1 - exponential_average_factor) * self.running_mean
+            with torch.no_grad():
+                self.running_mean = exponential_average_factor * mean\
+                    + (1 - exponential_average_factor) * self.running_mean
 
             input_r = input_r-mean_r[None, :, None, None]
             input_i = input_i-mean_i[None, :, None, None]
@@ -226,14 +227,15 @@ class ComplexBatchNorm2d(_ComplexBatchNorm):
             Cii = 1./n*input_i.pow(2).sum(dim=[0,2,3])+self.eps
             Cri = (input_r.mul(input_i)).mean(dim=[0,2,3])
 
-            self.running_covar[:,0] = exponential_average_factor * Crr * n / (n - 1)\
-                + (1 - exponential_average_factor) * self.running_covar[:,0]
+            with torch.no_grad():
+                self.running_covar[:,0] = exponential_average_factor * Crr * n / (n - 1)\
+                    + (1 - exponential_average_factor) * self.running_covar[:,0]
 
-            self.running_covar[:,1] = exponential_average_factor * Cii * n / (n - 1)\
-                + (1 - exponential_average_factor) * self.running_covar[:,1]
+                self.running_covar[:,1] = exponential_average_factor * Cii * n / (n - 1)\
+                    + (1 - exponential_average_factor) * self.running_covar[:,1]
 
-            self.running_covar[:,2] = exponential_average_factor * Cri * n / (n - 1)\
-                + (1 - exponential_average_factor) * self.running_covar[:,2]
+                self.running_covar[:,2] = exponential_average_factor * Cri * n / (n - 1)\
+                    + (1 - exponential_average_factor) * self.running_covar[:,2]
 
         else:
             mean = self.running_mean
@@ -291,8 +293,9 @@ class ComplexBatchNorm1d(_ComplexBatchNorm):
             mean = torch.stack((mean_r,mean_i),dim=1)
 
             # update running mean
-            self.running_mean = exponential_average_factor * mean\
-                + (1 - exponential_average_factor) * self.running_mean
+            with torch.no_grad():
+                self.running_mean = exponential_average_factor * mean\
+                    + (1 - exponential_average_factor) * self.running_mean
 
             # zero mean values
             input_r = input_r-mean_r[None, :]
@@ -305,14 +308,15 @@ class ComplexBatchNorm1d(_ComplexBatchNorm):
             Cii = input_i.var(dim=0,unbiased=False)+self.eps
             Cri = (input_r.mul(input_i)).mean(dim=0)
 
-            self.running_covar[:,0] = exponential_average_factor * Crr * n / (n - 1)\
-                + (1 - exponential_average_factor) * self.running_covar[:,0]
+            with torch.no_grad():
+                self.running_covar[:,0] = exponential_average_factor * Crr * n / (n - 1)\
+                    + (1 - exponential_average_factor) * self.running_covar[:,0]
 
-            self.running_covar[:,1] = exponential_average_factor * Cii * n / (n - 1)\
-                + (1 - exponential_average_factor) * self.running_covar[:,1]
+                self.running_covar[:,1] = exponential_average_factor * Cii * n / (n - 1)\
+                    + (1 - exponential_average_factor) * self.running_covar[:,1]
 
-            self.running_covar[:,2] = exponential_average_factor * Cri * n / (n - 1)\
-                + (1 - exponential_average_factor) * self.running_covar[:,2]
+                self.running_covar[:,2] = exponential_average_factor * Cri * n / (n - 1)\
+                    + (1 - exponential_average_factor) * self.running_covar[:,2]
 
         else:
             mean = self.running_mean
