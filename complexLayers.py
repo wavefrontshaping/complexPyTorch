@@ -26,7 +26,7 @@ class ComplexDropout(Module):
         self.p = p
         self.inplace = inplace
 
-    def forward(self,input,input):
+    def forward(self,input):
         return complex_dropout(input,self.p,self.inplace)
 
 class ComplexDropout2d(Module):
