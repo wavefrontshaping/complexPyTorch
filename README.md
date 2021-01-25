@@ -2,6 +2,11 @@
 
 A high-level toolbox for using complex valued neural networks in PyTorch.
 
+Before version 1.7 of PyTroch, complex tensor were not supported. 
+The initial version of **complexPyTorch** represented complex tensor using two tensors, one for the real and one for the imaginary part.
+Since version 1.7, compex tensors of type `torch.complex64` are allowed, but only a limited number of operation are supported.
+The current version **complexPyTorch** use complex tensors (hence requires PyTorch version >= 1.7) and add support for various operations and layers.
+
 ## Complex Valued Networks with PyTorch
 
 Artificial neural networks are mainly used for treating data encoded in real values, such as digitized images or sounds. 
@@ -15,7 +20,6 @@ Following [[C. Trabelsi et al., International Conference on Learning Representat
 * Relu (&#8450;Relu)
 * BatchNorm1d (Naive and Covariance approach)
 * BatchNorm2d (Naive and Covariance approach)
-
 
 
 ## Syntax and usage
@@ -58,49 +62,42 @@ class ComplexNet(nn.Module):
     
     def __init__(self):
         super(ComplexNet, self).__init__()
-        self.conv1 = ComplexConv2d(1, 20, 5, 1)
-        self.bn  = ComplexBatchNorm2d(20)
-        self.conv2 = ComplexConv2d(20, 50, 5, 1)
-        self.fc1 = ComplexLinear(4*4*50, 500)
+        self.conv1 = ComplexConv2d(1, 10, 5, 1)
+        self.bn  = ComplexBatchNorm2d(10)
+        self.conv2 = ComplexConv2d(10, 20, 5, 1)
+        self.fc1 = ComplexLinear(4*4*20, 500)
         self.fc2 = ComplexLinear(500, 10)
              
     def forward(self,x):
-        xr = x
-        # imaginary part to zero
-        xi = torch.zeros(xr.shape, dtype = xr.dtype, device = xr.device)
-        xr,xi = self.conv1(xr,xi)
-        xr,xi = complex_relu(xr,xi)
-        xr,xi = complex_max_pool2d(xr,xi, 2, 2)
-        
-        
-        xr,xi = self.bn(xr,xi)
-        xr,xi = self.conv2(xr,xi)
-        xr,xi = complex_relu(xr,xi)
-        xr,xi = complex_max_pool2d(xr,xi, 2, 2)
-        
-        xr = xr.view(-1, 4*4*50)
-        xi = xi.view(-1, 4*4*50)
-        xr,xi = self.fc1(xr,xi)
-        xr,xi = complex_relu(xr,xi)
-        xr,xi = self.fc2(xr,xi)
-        # take the absolute value as output
-        x = torch.sqrt(torch.pow(xr,2)+torch.pow(xi,2))
-        return F.log_softmax(x, dim=1)
+        x = self.conv1(x)
+        x = complex_relu(x)
+        x = complex_max_pool2d(x, 2, 2)
+        x = self.bn(x)
+        x = self.conv2(x)
+        x = complex_relu(x)
+        x = complex_max_pool2d(x, 2, 2)
+        x = x.view(-1,4*4*20)
+        x = self.fc1(x)
+        x = complex_relu(x)
+        x = self.fc2(x)
+        x = x.abs()
+        x =  F.log_softmax(x, dim=1)
+        return x
     
-device = torch.device("cuda:0" )
+device = device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model = ComplexNet().to(device)
 optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
 def train(model, device, train_loader, optimizer, epoch):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
-        data, target = data.to(device), target.to(device)
+        data, target = data.to(device).type(torch.complex64), target.to(device)
         optimizer.zero_grad()
         output = model(data)
         loss = F.nll_loss(output, target)
         loss.backward()
         optimizer.step()
-        if batch_idx % 1000 == 0:
+        if batch_idx % 100 == 0:
             print('Train Epoch: {:3} [{:6}/{:6} ({:3.0f}%)]\tLoss: {:.6f}'.format(
                 epoch,
                 batch_idx * len(data), 
@@ -113,11 +110,7 @@ def train(model, device, train_loader, optimizer, epoch):
 for epoch in range(50):
     train(model, device, train_loader, optimizer, epoch)
 ```
-        
-## Todo
-* Script ComplexBatchNorm for improved efficiency ([jit doc](https://pytorch.org/docs/stable/jit.html))
-* Add more layers (Conv1D, Upsample, ConvTranspose...)
-* Add complex cost functions and usual functions (e.g. Pearson correlation)
+       
 
 ## Acknowledgments
 
