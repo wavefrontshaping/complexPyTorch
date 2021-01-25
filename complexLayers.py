@@ -26,8 +26,8 @@ class ComplexDropout(Module):
         self.p = p
         self.inplace = inplace
 
-    def forward(self,input_r,input_i):
-        return complex_dropout(input_r,input_i,self.p,self.inplace)
+    def forward(self,input,input):
+        return complex_dropout(input,self.p,self.inplace)
 
 class ComplexDropout2d(Module):
     def __init__(self,p=0.5, inplace=False):
@@ -35,8 +35,8 @@ class ComplexDropout2d(Module):
         self.p = p
         self.inplace = inplace
 
-    def forward(self,input_r,input_i):
-        return complex_dropout2d(input_r,input_i,self.p,self.inplace)
+    def forward(self,input):
+        return complex_dropout2d(input,self.p,self.inplace)
 
 class ComplexMaxPool2d(Module):
 
@@ -50,16 +50,16 @@ class ComplexMaxPool2d(Module):
         self.ceil_mode = ceil_mode
         self.return_indices = return_indices
 
-    def forward(self,input_r,input_i):
-        return complex_max_pool2d(input_r,input_i,kernel_size = self.kernel_size,
+    def forward(self,input):
+        return complex_max_pool2d(input,kernel_size = self.kernel_size,
                                 stride = self.stride, padding = self.padding,
                                 dilation = self.dilation, ceil_mode = self.ceil_mode,
                                 return_indices = self.return_indices)
 
 class ComplexReLU(Module):
 
-     def forward(self,input_r,input_i):
-         return complex_relu(input_r,input_i)
+     def forward(self,input):
+         return complex_relu(inpu)
 
 class ComplexConvTranspose2d(Module):
 
@@ -74,7 +74,7 @@ class ComplexConvTranspose2d(Module):
                                        output_padding, groups, bias, dilation, padding_mode)
 
 
-    def forward(self,input_r,input_i):
+    def forward(self,input):
         return apply_complex(self.conv_tran_r, self.conv_tran_i, input)
 
 class ComplexConv2d(Module):
@@ -245,10 +245,7 @@ class ComplexBatchNorm2d(_ComplexBatchNorm):
 
 class ComplexBatchNorm1d(_ComplexBatchNorm):
 
-    def forward(self, input_r, input_i):
-        assert(input_r.size() == input_i.size())
-        assert(len(input_r.shape) == 2)
-        #self._check_input_dim(input)
+    def forward(self, input):
 
         exponential_average_factor = 0.0
 
@@ -264,25 +261,22 @@ class ComplexBatchNorm1d(_ComplexBatchNorm):
         if self.training:
 
             # calculate mean of real and imaginary part
-            mean_r = input_r.mean(dim=0)
-            mean_i = input_i.mean(dim=0)
-            mean = torch.stack((mean_r,mean_i),dim=1)
+            mean_r = input.real.mean(dim=0).type(torch.complex64)
+            mean_i = input.imag.mean(dim=0).type(torch.complex64)
+            mean = mean_r + 1j*mean_i
 
             # update running mean
             with torch.no_grad():
                 self.running_mean = exponential_average_factor * mean\
                     + (1 - exponential_average_factor) * self.running_mean
 
-            # zero mean values
-            input_r = input_r-mean_r[None, :]
-            input_i = input_i-mean_i[None, :]
-
+            input = input - mean[None, :, None, None]
 
             # Elements of the covariance matrix (biased for train)
-            n = input_r.numel() / input_r.size(1)
-            Crr = input_r.var(dim=0,unbiased=False)+self.eps
-            Cii = input_i.var(dim=0,unbiased=False)+self.eps
-            Cri = (input_r.mul(input_i)).mean(dim=0)
+            n = input.numel() / input.size(1)
+            Crr = input.real.var(dim=0,unbiased=False)+self.eps
+            Cii = input.imag.var(dim=0,unbiased=False)+self.eps
+            Cri = (input.real.mul(input.imag)).mean(dim=0)
 
             with torch.no_grad():
                 self.running_covar[:,0] = exponential_average_factor * Crr * n / (n - 1)\
@@ -300,8 +294,7 @@ class ComplexBatchNorm1d(_ComplexBatchNorm):
             Cii = self.running_covar[:,1]+self.eps
             Cri = self.running_covar[:,2]
             # zero mean values
-            input_r = input_r-mean[None,:,0]
-            input_i = input_i-mean[None,:,1]
+            input = input - mean[None, :, None, None]
 
         # calculate the inverse square root the covariance matrix
         det = Crr*Cii-Cri.pow(2)
@@ -311,15 +304,16 @@ class ComplexBatchNorm1d(_ComplexBatchNorm):
         Rrr = (Cii + s) * inverse_st
         Rii = (Crr + s) * inverse_st
         Rri = -Cri * inverse_st
-
-        input_r, input_i = Rrr[None,:]*input_r+Rri[None,:]*input_i, \
-                           Rii[None,:]*input_i+Rri[None,:]*input_r
+        
+        input = (Rrr[None,:]*input.real+Rri[None,:]*input.imag).type(torch.complex64) \
+                + 1j*(Rii[None,:]*input.imag+Rri[None,:]*input.real).type(torch.complex64)
 
         if self.affine:
-            input_r, input_i = self.weight[None,:,0]*input_r+self.weight[None,:,2]*input_i+\
-                               self.bias[None,:,0], \
-                               self.weight[None,:,2]*input_r+self.weight[None,:,1]*input_i+\
-                               self.bias[None,:,1]
+            input = (self.weight[None,:,0]*input.real+self.weight[None,:,2]*input.imag+\
+                    self.bias[None,:,0]).type(torch.complex64) \
+                    +1j*(self.weight[None,:,2]*input.real+self.weight[None,:,1]*input.imag+\
+                    self.bias[None,:,1]).type(torch.complex64)
+
 
         del Crr, Cri, Cii, Rrr, Rii, Rri, det, s, t
-        return input_r, input_i
+        return input
