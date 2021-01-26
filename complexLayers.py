@@ -21,22 +21,26 @@ def apply_complex(fr, fi, input):
             + 1j*(fr(input.imag)+fi(input.real)).type(torch.complex64)
 
 class ComplexDropout(Module):
-    def __init__(self,p=0.5, inplace=False):
+    def __init__(self,p=0.5):
         super(ComplexDropout,self).__init__()
         self.p = p
-        self.inplace = inplace
 
     def forward(self,input):
-        return complex_dropout(input,self.p,self.inplace)
+        if self.training:
+            return complex_dropout(input,self.p)
+        else:
+            return input
 
 class ComplexDropout2d(Module):
-    def __init__(self,p=0.5, inplace=False):
+    def __init__(self,p=0.5):
         super(ComplexDropout2d,self).__init__()
         self.p = p
-        self.inplace = inplace
 
     def forward(self,input):
-        return complex_dropout2d(input,self.p,self.inplace)
+        if self.training:
+            return complex_dropout2d(input,self.p)
+        else:
+            return input
 
 class ComplexMaxPool2d(Module):
 
