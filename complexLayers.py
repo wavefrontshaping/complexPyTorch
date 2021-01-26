@@ -63,7 +63,7 @@ class ComplexMaxPool2d(Module):
 class ComplexReLU(Module):
 
      def forward(self,input):
-         return complex_relu(inpu)
+         return complex_relu(input)
 
 class ComplexConvTranspose2d(Module):
 
