@@ -5,8 +5,27 @@
 @author: spopoff
 """
 
-from torch.nn.functional import relu, max_pool2d, dropout, dropout2d
+from torch.nn.functional import relu, max_pool2d, avg_pool2d, dropout, dropout2d
 import torch
+
+def complex_matmul(A, B):
+    '''
+        Performs the matrix product between two complex matrices
+    '''
+
+    outp_real = torch.matmul(A.real, B.real) - torch.matmul(A.imag, B.imag)
+    outp_imag = torch.matmul(A.real, B.imag) + torch.matmul(A.imag, B.real)
+    
+    return outp_real.type(torch.complex64) + 1j * outp_imag.type(torch.complex64)
+
+def complex_avg_pool2d(input, *args, **kwargs):
+    '''
+    Perform complex average pooling.
+    '''    
+    absolute_value_real = avg_pool2d(input.real, *args, **kwargs)
+    absolute_value_imag =  avg_pool2d(input.imag, *args, **kwargs)    
+    
+    return absolute_value_real.type(torch.complex64)+1j*absolute_value_imag.type(torch.complex64)
 
 def complex_relu(input):
     return relu(input.real).type(torch.complex64)+1j*relu(input.imag).type(torch.complex64)
