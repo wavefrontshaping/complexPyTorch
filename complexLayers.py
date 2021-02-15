@@ -205,28 +205,35 @@ class ComplexBatchNorm2d(_ComplexBatchNorm):
                 else:  # use exponential moving average
                     exponential_average_factor = self.momentum
 
-
-        if self.training:
-
+        if self.training or (not self.training and not self.track_running_stats):
             # calculate mean of real and imaginary part
             # mean does not support automatic differentiation for outputs with complex dtype.
             mean_r = input.real.mean([0, 2, 3]).type(torch.complex64)
             mean_i = input.imag.mean([0, 2, 3]).type(torch.complex64)
             mean = mean_r + 1j*mean_i
+        else:
+            mean = self.running_mean
 
+        if self.training and self.track_running_stats:
             # update running mean
             with torch.no_grad():
                 self.running_mean = exponential_average_factor * mean\
                     + (1 - exponential_average_factor) * self.running_mean
 
-            input = input - mean[None, :, None, None]
+        input = input - mean[None, :, None, None]
 
+        if self.training or (not self.training and not self.track_running_stats):
             # Elements of the covariance matrix (biased for train)
             n = input.numel() / input.size(1)
             Crr = 1./n*input.real.pow(2).sum(dim=[0,2,3])+self.eps
             Cii = 1./n*input.imag.pow(2).sum(dim=[0,2,3])+self.eps
             Cri = (input.real.mul(input.imag)).mean(dim=[0,2,3])
-
+        else:
+            Crr = self.running_covar[:,0]+self.eps
+            Cii = self.running_covar[:,1]+self.eps
+            Cri = self.running_covar[:,2]#+self.eps 
+       
+        if self.training and self.track_running_stats:
             with torch.no_grad():
                 self.running_covar[:,0] = exponential_average_factor * Crr * n / (n - 1)\
                     + (1 - exponential_average_factor) * self.running_covar[:,0]
@@ -237,13 +244,9 @@ class ComplexBatchNorm2d(_ComplexBatchNorm):
                 self.running_covar[:,2] = exponential_average_factor * Cri * n / (n - 1)\
                     + (1 - exponential_average_factor) * self.running_covar[:,2]
 
-        else:
-            mean = self.running_mean
-            Crr = self.running_covar[:,0]+self.eps
-            Cii = self.running_covar[:,1]+self.eps
-            Cri = self.running_covar[:,2]#+self.eps
+       
             
-            input = input - mean[None, :, None, None]
+
 
         # calculate the inverse square root the covariance matrix
         det = Crr*Cii-Cri.pow(2)
@@ -281,27 +284,34 @@ class ComplexBatchNorm1d(_ComplexBatchNorm):
                 else:  # use exponential moving average
                     exponential_average_factor = self.momentum
 
-        if self.training:
-
+        if self.training or (not self.training and not self.track_running_stats):            
             # calculate mean of real and imaginary part
             mean_r = input.real.mean(dim=0).type(torch.complex64)
             mean_i = input.imag.mean(dim=0).type(torch.complex64)
             mean = mean_r + 1j*mean_i
-
+        else:
+            mean = self.running_mean
+        
+        if self.training and self.track_running_stats:
             # update running mean
             with torch.no_grad():
                 self.running_mean = exponential_average_factor * mean\
                     + (1 - exponential_average_factor) * self.running_mean
 
-            input = input - mean[None, :, None, None]
+        input = input - mean[None, :, None, None]
 
+        if self.training or (not self.training and not self.track_running_stats):
             # Elements of the covariance matrix (biased for train)
             n = input.numel() / input.size(1)
             Crr = input.real.var(dim=0,unbiased=False)+self.eps
             Cii = input.imag.var(dim=0,unbiased=False)+self.eps
             Cri = (input.real.mul(input.imag)).mean(dim=0)
-
-            with torch.no_grad():
+        else:
+            Crr = self.running_covar[:,0]+self.eps
+            Cii = self.running_covar[:,1]+self.eps
+            Cri = self.running_covar[:,2]
+            
+        if self.training and self.track_running_stats:
                 self.running_covar[:,0] = exponential_average_factor * Crr * n / (n - 1)\
                     + (1 - exponential_average_factor) * self.running_covar[:,0]
 
@@ -310,14 +320,6 @@ class ComplexBatchNorm1d(_ComplexBatchNorm):
 
                 self.running_covar[:,2] = exponential_average_factor * Cri * n / (n - 1)\
                     + (1 - exponential_average_factor) * self.running_covar[:,2]
-
-        else:
-            mean = self.running_mean
-            Crr = self.running_covar[:,0]+self.eps
-            Cii = self.running_covar[:,1]+self.eps
-            Cri = self.running_covar[:,2]
-            # zero mean values
-            input = input - mean[None, :, None, None]
 
         # calculate the inverse square root the covariance matrix
         det = Crr*Cii-Cri.pow(2)
