@@ -146,7 +146,7 @@ class _ComplexBatchNorm(Module):
             self.register_parameter('weight', None)
             self.register_parameter('bias', None)
         if self.track_running_stats:
-            self.register_buffer('running_mean', torch.zeros(num_features,1, dtype = torch.complex64))
+            self.register_buffer('running_mean', torch.zeros(num_features, dtype = torch.complex64))
             self.register_buffer('running_covar', torch.zeros(num_features,3))
             self.running_covar[:,0] = 1.4142135623730951
             self.running_covar[:,1] = 1.4142135623730951
@@ -223,7 +223,7 @@ class ComplexBatchNorm2d(_ComplexBatchNorm):
             Crr = self.running_covar[:,0]+self.eps
             Cii = self.running_covar[:,1]+self.eps
             Cri = self.running_covar[:,2]#+self.eps
-
+            
             input = input - mean[None, :, None, None]
 
         # calculate the inverse square root the covariance matrix
