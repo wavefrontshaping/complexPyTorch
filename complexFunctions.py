@@ -10,7 +10,7 @@ import torch
 
 def complex_matmul(A, B):
     '''
-        Performs the matrix product between two complex matrices
+        Performs the matrix product between two complex matricess
     '''
 
     outp_real = torch.matmul(A.real, B.real) - torch.matmul(A.imag, B.imag)
