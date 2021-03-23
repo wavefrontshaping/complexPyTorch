@@ -16,9 +16,9 @@ from torch.nn import ConvTranspose2d
 from complexFunctions import complex_relu, complex_max_pool2d, complex_avg_pool2d
 from complexFunctions import complex_dropout, complex_dropout2d
 
-def apply_complex(fr, fi, input):
-    return (fr(input.real)-fi(input.imag)).type(torch.complex64) \
-            + 1j*(fr(input.imag)+fi(input.real)).type(torch.complex64)
+def apply_complex(fr, fi, input, dtype = torch.complex64):
+    return (fr(input.real)-fi(input.imag)).type(dtype) \
+            + 1j*(fr(input.imag)+fi(input.real)).type(dtype)
 
 class ComplexDropout(Module):
     def __init__(self,p=0.5):

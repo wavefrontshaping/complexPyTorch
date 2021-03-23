@@ -99,14 +99,17 @@ def complex_max_pool2d(input,kernel_size, stride=None, padding=0,
 def complex_dropout(input, p=0.5, training=True):
     # need to have the same dropout mask for real and imaginary part, 
     # this not a clean solution!
-    mask = torch.ones_like(input).type(torch.float32)
+    #mask = torch.ones_like(input).type(torch.float32)
+    mask = torch.ones(*input.shape, dtype = torch.float32)
     mask = dropout(mask, p, training)*1/(1-p)
+    mask.type(input.dtype)
     return mask*input
 
 
 def complex_dropout2d(input, p=0.5, training=True):
     # need to have the same dropout mask for real and imaginary part, 
     # this not a clean solution!
-    mask = torch.ones_like(input).type(torch.float32)
+    mask = torch.ones(*input.shape, dtype = torch.float32)
     mask = dropout2d(mask, p, training)*1/(1-p)
+    mask.type(input.dtype)
     return mask*input
