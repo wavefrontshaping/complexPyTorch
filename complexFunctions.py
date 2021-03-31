@@ -5,7 +5,7 @@
 @author: spopoff
 """
 
-from torch.nn.functional import relu, max_pool2d, avg_pool2d, dropout, dropout2d, interpolate
+from torch.nn.functional import relu, max_pool2d, avg_pool2d, dropout, dropout2d, interpolate, sigmoid, tanh
 import torch
 
 def complex_matmul(A, B):
@@ -39,6 +39,20 @@ def complex_normalize(input):
 
 def complex_relu(input):
     return relu(input.real).type(torch.complex64)+1j*relu(input.imag).type(torch.complex64)
+
+def complex_sigmoid(input):
+    return sigmoid(input.real).type(torch.complex64)+1j*sigmoid(input.imag).type(torch.complex64)
+
+def complex_tanh(input):
+    return tanh(input.real).type(torch.complex64)+1j*tanh(input.imag).type(torch.complex64)
+
+def complex_opposite(input):
+    return -(input.real).type(torch.complex64)+1j*(-(input.imag).type(torch.complex64))
+
+def complex_stack(input, dim):
+    input_real = [x.real for x in input]
+    input_imag = [x.imag for x in input]
+    return torch.stack(input_real, dim).type(torch.complex64)+1j*torch.stack(input_imag, dim).type(torch.complex64)
 
 def _retrieve_elements_from_indices(tensor, indices):
     flattened_tensor = tensor.flatten(start_dim=-2)
@@ -110,3 +124,5 @@ def complex_dropout2d(input, p=0.5, training=True):
     mask = torch.ones_like(input).type(torch.float32)
     mask = dropout2d(mask, p, training)*1/(1-p)
     return mask*input
+
+
