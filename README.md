@@ -7,6 +7,11 @@ The initial version of **complexPyTorch** represented complex tensor using two t
 Since version 1.7, compex tensors of type `torch.complex64` are allowed, but only a limited number of operation are supported.
 The current version **complexPyTorch** use complex tensors (hence requires PyTorch version >= 1.7) and add support for various operations and layers.
 
+## Installation
+```bash
+pip install complexPyTorch
+```
+
 ## Complex Valued Networks with PyTorch
 
 Artificial neural networks are mainly used for treating data encoded in real values, such as digitized images or sounds. 
@@ -47,8 +52,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import datasets, transforms
-from complexLayers import ComplexBatchNorm2d, ComplexConv2d, ComplexLinear
-from complexFunctions import complex_relu, complex_max_pool2d
+from complexPyTorch.complexLayers import ComplexBatchNorm2d, ComplexConv2d, ComplexLinear
+from complexPyTorch.complexFunctions import complex_relu, complex_max_pool2d
 
 batch_size = 64
 trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (1.0,))])
