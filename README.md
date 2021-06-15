@@ -89,7 +89,7 @@ class ComplexNet(nn.Module):
         x =  F.log_softmax(x, dim=1)
         return x
     
-device = device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model = ComplexNet().to(device)
 optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
