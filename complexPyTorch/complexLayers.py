@@ -298,7 +298,7 @@ class ComplexBatchNorm1d(_ComplexBatchNorm):
                 self.running_mean = exponential_average_factor * mean\
                     + (1 - exponential_average_factor) * self.running_mean
 
-        input = input - mean[None, :, None, None]
+        input = input - mean[None, ...]
 
         if self.training or (not self.training and not self.track_running_stats):
             # Elements of the covariance matrix (biased for train)
