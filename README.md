@@ -26,6 +26,12 @@ Following [[C. Trabelsi et al., International Conference on Learning Representat
 * BatchNorm1d (Naive and Covariance approach)
 * BatchNorm2d (Naive and Covariance approach)
 
+## Citating the code
+
+If the code was helpful to your work, please consider citing it:
+
+[![DOI](https://img.shields.io/badge/DOI-10.1103%2FPhysRevX.11.021060-blue)](https://doi.org/10.1103/PhysRevX.11.021060)
+
 
 ## Syntax and usage
 
