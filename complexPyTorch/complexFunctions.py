@@ -40,6 +40,12 @@ def complex_normalize(input):
 def complex_relu(input):
     return relu(input.real).type(torch.complex64)+1j*relu(input.imag).type(torch.complex64)
 
+<<<<<<< HEAD
+=======
+def complex_relu(input):
+    return relu(input.real).type(torch.complex64)+1j*relu(input.imag).type(torch.complex64)
+
+>>>>>>> octaveguinebretiere-master
 def complex_sigmoid(input):
     return sigmoid(input.real).type(torch.complex64)+1j*sigmoid(input.imag).type(torch.complex64)
 

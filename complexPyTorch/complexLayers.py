@@ -13,8 +13,21 @@ import torch
 from torch.nn import Module, Parameter, init
 from torch.nn import Conv2d, Linear, BatchNorm1d, BatchNorm2d
 from torch.nn import ConvTranspose2d
+<<<<<<< HEAD:complexPyTorch/complexLayers.py
 from .complexFunctions import complex_relu, complex_max_pool2d, complex_avg_pool2d
 from .complexFunctions import complex_dropout, complex_dropout2d
+=======
+from complexFunctions import ( 
+    complex_relu,
+    complex_tanh,
+    complex_sigmoid,
+    complex_max_pool2d,
+    complex_avg_pool2d,
+    complex_dropout,
+    complex_dropout2d,
+    complex_opposite,
+)
+>>>>>>> d00e50c5d93386dd85b363a39c24cf783b7914aa:complexLayers.py
 
 def apply_complex(fr, fi, input, dtype = torch.complex64):
     return (fr(input.real)-fi(input.imag)).type(dtype) \
