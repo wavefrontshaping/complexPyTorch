@@ -206,7 +206,6 @@ class ComplexBatchNorm2d(_ComplexBatchNorm):
     def forward(self, input):
         exponential_average_factor = 0.0
 
-
         if self.training and self.track_running_stats:
             if self.num_batches_tracked is not None:
                 self.num_batches_tracked += 1
@@ -253,10 +252,6 @@ class ComplexBatchNorm2d(_ComplexBatchNorm):
 
                 self.running_covar[:,2] = exponential_average_factor * Cri * n / (n - 1)\
                     + (1 - exponential_average_factor) * self.running_covar[:,2]
-
-       
-            
-
 
         # calculate the inverse square root the covariance matrix
         det = Crr*Cii-Cri.pow(2)
@@ -353,17 +348,13 @@ class ComplexBatchNorm1d(_ComplexBatchNorm):
         del Crr, Cri, Cii, Rrr, Rii, Rri, det, s, t
         return input
 
-# class complexGruCell(Module):
-    
-#     def __init__(self):
-
-class ComplexGruCell(Module):
+class ComplexGRUCell(Module):
     """
     A GRU cell for complex-valued inputs
     """
 
     def __init__(self, input_length=10, hidden_length=20):
-        super(ComplexGruCell, self).__init__()
+        super(ComplexGRUCell, self).__init__()
         self.input_length = input_length
         self.hidden_length = hidden_length
 
@@ -415,13 +406,13 @@ class ComplexGruCell(Module):
 
         return h_new
     
-class ComplexBNGruCell(Module):
+class ComplexBNGRUCell(Module):
     """
     A BN-GRU cell for complex-valued inputs
     """
 
     def __init__(self, input_length=10, hidden_length=20):
-        super(ComplexBNGruCell, self).__init__()
+        super(ComplexBNGRUCell, self).__init__()
         self.input_length = input_length
         self.hidden_length = hidden_length
 
