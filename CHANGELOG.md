@@ -1,8 +1,10 @@
-## main
+## 0.4.1
 
 ### Added
 
-* GRU Cell and BN-GRU Cell
+* GRU Cell and BN-GRU Cell layers (#11)
+* Sigmoid functions/layers (#11)
+* Tanh functions/layers (#11)
 
 ## 0.4
 
