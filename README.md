@@ -15,16 +15,19 @@ pip install complexPyTorch
 ## Complex Valued Networks with PyTorch
 
 Artificial neural networks are mainly used for treating data encoded in real values, such as digitized images or sounds. 
-In such systems, using complex-valued tensor would be quite useless. 
+In such systems, using complex-valued tensors would be quite useless. 
 However, for physic related topics, in particular when dealing with wave propagation, using complex values is interesting as the physics typically has linear, hence more simple, behavior when considering complex fields. 
 complexPyTorch is a simple implementation of complex-valued functions and modules using the high-level API of PyTorch. 
 Following [[C. Trabelsi et al., International Conference on Learning Representations, (2018)](https://openreview.net/forum?id=H1T2hmZAb)], it allows the following layers and functions to be used with complex values:
 * Linear
 * Conv2d
+* ConvTranspose2d
 * MaxPool2d
+* AvgPool2d
 * Relu (&#8450;Relu)
 * Sigmoid
 * Tanh
+* Dropout2d
 * BatchNorm1d (Naive and Covariance approach)
 * BatchNorm2d (Naive and Covariance approach)
 * GRU/BN-GRU Cell
