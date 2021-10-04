@@ -23,8 +23,11 @@ Following [[C. Trabelsi et al., International Conference on Learning Representat
 * Conv2d
 * MaxPool2d
 * Relu (&#8450;Relu)
+* Sigmoid
+* Tanh
 * BatchNorm1d (Naive and Covariance approach)
 * BatchNorm2d (Naive and Covariance approach)
+* GRU/BN-GRU Cell
 
 ## Citating the code
 

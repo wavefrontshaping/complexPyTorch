@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='complexPyTorch',
-         version='0.3',
+         version='0.4.1',
          description='A high-level toolbox for using complex valued neural networks in PyTorch.',
          long_description=open('README.md').read().strip(),
          long_description_content_type='text/markdown',

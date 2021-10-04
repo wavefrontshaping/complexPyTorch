@@ -1,3 +1,9 @@
+## main
+
+### Added
+
+* GRU Cell and BN-GRU Cell
+
 ## 0.4
 
 ### Fixed
