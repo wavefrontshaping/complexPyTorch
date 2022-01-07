@@ -74,23 +74,23 @@ class ComplexMaxPool2d(Module):
                                 return_indices = self.return_indices)
     
 
-class ComplexAvgPool2d(Module):
-
+class ComplexAvgPool2d(torch.nn.Module):
+    
     def __init__(self,kernel_size, stride= None, padding = 0,
-                 dilation = 1, return_indices = False, ceil_mode = False):
+                 ceil_mode = False, count_include_pad = True, divisor_override = None):
         super(ComplexAvgPool2d,self).__init__()
         self.kernel_size = kernel_size
         self.stride = stride
         self.padding = padding
-        self.dilation = dilation
         self.ceil_mode = ceil_mode
-        self.return_indices = return_indices
+        self.count_include_pad = count_include_pad
+        self.divisor_override = divisor_override
 
     def forward(self,input):
         return complex_avg_pool2d(input,kernel_size = self.kernel_size,
                                 stride = self.stride, padding = self.padding,
-                                dilation = self.dilation, ceil_mode = self.ceil_mode,
-                                return_indices = self.return_indices)
+                                ceil_mode = self.ceil_mode, count_include_pad = self.count_include_pad,
+                                divisor_override = self.divisor_override)
 
 class ComplexReLU(Module):
 
