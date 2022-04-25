@@ -18,7 +18,6 @@ from torch.nn import (
 )
 
 from .complexFunctions import (
-    complex_amp_tanh,
     complex_relu,
     complex_tanh,
     complex_sigmoid,
@@ -107,11 +106,6 @@ class ComplexSigmoid(Module):
 class ComplexTanh(Module):
     def forward(self, input):
         return complex_tanh(input)
-
-
-class ComplexAmpTanh(Module):
-    def forward(self, input):
-        return complex_amp_tanh(input)
 
 
 class ComplexPReLU(Module):
