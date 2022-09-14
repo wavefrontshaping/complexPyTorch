@@ -89,7 +89,7 @@ def complex_upsample2(input, size=None, scale_factor=None, mode='nearest',
                                     align_corners=align_corners, recompute_scale_factor=recompute_scale_factor)
     
     return outp_abs \
-           * (torch.cos(angle).type(torch.complex64)+1j*torch.sin(angle).type(torch.complex64))
+           * (torch.cos(outp_angle).type(torch.complex64)+1j*torch.sin(outp_angle).type(torch.complex64))
 
 
 def complex_max_pool2d(input,kernel_size, stride=None, padding=0,
