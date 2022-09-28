@@ -40,12 +40,9 @@ def complex_normalize(input):
 def complex_relu(input):
     return relu(input.real).type(torch.complex64)+1j*relu(input.imag).type(torch.complex64)
 
-<<<<<<< HEAD
-=======
 def complex_relu(input):
     return relu(input.real).type(torch.complex64)+1j*relu(input.imag).type(torch.complex64)
 
->>>>>>> octaveguinebretiere-master
 def complex_sigmoid(input):
     return sigmoid(input.real).type(torch.complex64)+1j*sigmoid(input.imag).type(torch.complex64)
 
@@ -108,7 +105,7 @@ def complex_max_pool2d(input,kernel_size, stride=None, padding=0,
                             )
     # performs the selection on the absolute values
     absolute_value = absolute_value.type(torch.complex64)
-    # retrieve the corresonding phase value using the indices
+    # retrieve the corresponding phase value using the indices
     # unfortunately, the derivative for 'angle' is not implemented
     angle = torch.atan2(input.imag,input.real)
     # get only the phase values selected by max pool
@@ -120,7 +117,8 @@ def complex_dropout(input, p=0.5, training=True):
     # need to have the same dropout mask for real and imaginary part, 
     # this not a clean solution!
     #mask = torch.ones_like(input).type(torch.float32)
-    mask = torch.ones(*input.shape, dtype = torch.float32)
+    device = input.device
+    mask = torch.ones(*input.shape, dtype = torch.float32, device = device)
     mask = dropout(mask, p, training)*1/(1-p)
     mask.type(input.dtype)
     return mask*input
@@ -129,7 +127,8 @@ def complex_dropout(input, p=0.5, training=True):
 def complex_dropout2d(input, p=0.5, training=True):
     # need to have the same dropout mask for real and imaginary part, 
     # this not a clean solution!
-    mask = torch.ones(*input.shape, dtype = torch.float32)
+    device = input.device
+    mask = torch.ones(*input.shape, dtype = torch.float32, device = device)
     mask = dropout2d(mask, p, training)*1/(1-p)
     mask.type(input.dtype)
     return mask*input
