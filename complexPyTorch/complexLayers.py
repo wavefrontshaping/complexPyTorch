@@ -11,29 +11,41 @@ Based on https://openreview.net/forum?id=H1T2hmZAb
 from typing import Optional
 
 import torch
-from complexFunctions import (complex_avg_pool2d, complex_dropout,
-                              complex_dropout2d, complex_max_pool2d,
-                              complex_opposite, complex_relu, complex_sigmoid,
-                              complex_tanh)
-from torch.nn import (BatchNorm1d, BatchNorm2d, Conv2d, ConvTranspose2d,
-                      Linear, Module, Parameter, init)
+from torch.nn import (
+    Module, Parameter, init,
+    Conv2d, ConvTranspose2d, Linear, LSTM, GRU,
+    BatchNorm1d, BatchNorm2d,
+    PReLU
+)
+
+from .complexFunctions import (
+    complex_relu,
+    complex_tanh,
+    complex_sigmoid,
+    complex_max_pool2d,
+    complex_avg_pool2d,
+    complex_dropout,
+    complex_dropout2d,
+    complex_opposite,
+)
 
 
-def apply_complex(fr, fi, inp, dtype=torch.complex64):
-    return (fr(inp.real) - fi(inp.imag)).type(dtype) + 1j * (
-        fr(inp.imag) + fi(inp.real)
-    ).type(dtype)
+def apply_complex(fr, fi, input, dtype=torch.complex64):
+    return (fr(input.real)-fi(input.imag)).type(dtype) \
+        + 1j*(fr(input.imag)+fi(input.real)).type(dtype)
+
 
 class ComplexDropout(Module):
     def __init__(self, p=0.5):
-        super(ComplexDropout, self).__init__()
+        super().__init__()
         self.p = p
 
-    def forward(self, inp):
+    def forward(self, input):
         if self.training:
-            return complex_dropout(inp, self.p)
+            return complex_dropout(input, self.p)
         else:
             return inp
+
 
 
 class ComplexDropout2d(Module):
@@ -89,8 +101,8 @@ class ComplexAvgPool2d(torch.nn.Module):
         self.count_include_pad = count_include_pad
         self.divisor_override = divisor_override
         
-    def forward(self,input):
-        return complex_avg_pool2d(input,kernel_size = self.kernel_size,
+    def forward(self,inp):
+        return complex_avg_pool2d(inp,kernel_size = self.kernel_size,
                                 stride = self.stride, padding = self.padding,
                                 ceil_mode = self.ceil_mode, count_include_pad = self.count_include_pad,
                                 divisor_override = self.divisor_override)
@@ -106,6 +118,16 @@ class ComplexSigmoid(Module):
     @staticmethod
     def forward(inp):
         return complex_sigmoid(inp)
+      
+class ComplexPReLU(Module):
+    def __init__(self):
+        super().__init__()
+        self.r_prelu = PReLU()        
+        self.i_prelu = PReLU()
+
+    @staticmethod
+    def forward(self, inp):
+        return self.r_prelu(inp.real) + 1j*self.i_prelu(inp.imag)
 
 
 class ComplexTanh(Module):
@@ -129,32 +151,12 @@ class ComplexConvTranspose2d(Module):
         padding_mode="zeros",
     ):
 
-        super(ComplexConvTranspose2d, self).__init__()
+        super().__init__()
 
-        self.conv_tran_r = ConvTranspose2d(
-            in_channels,
-            out_channels,
-            kernel_size,
-            stride,
-            padding,
-            output_padding,
-            groups,
-            bias,
-            dilation,
-            padding_mode,
-        )
-        self.conv_tran_i = ConvTranspose2d(
-            in_channels,
-            out_channels,
-            kernel_size,
-            stride,
-            padding,
-            output_padding,
-            groups,
-            bias,
-            dilation,
-            padding_mode,
-        )
+        self.conv_tran_r = ConvTranspose2d(in_channels, out_channels, kernel_size, stride, padding,
+                                           output_padding, groups, bias, dilation, padding_mode)
+        self.conv_tran_i = ConvTranspose2d(in_channels, out_channels, kernel_size, stride, padding,
+                                           output_padding, groups, bias, dilation, padding_mode)
 
     def forward(self, inp):
         return apply_complex(self.conv_tran_r, self.conv_tran_i, inp)
@@ -200,7 +202,7 @@ class ComplexConv2d(Module):
 
 class ComplexLinear(Module):
     def __init__(self, in_features, out_features):
-        super(ComplexLinear, self).__init__()
+        super().__init__()
         self.fc_r = Linear(in_features, out_features)
         self.fc_i = Linear(in_features, out_features)
 
@@ -315,7 +317,7 @@ class _ComplexBatchNorm(Module):
             init.constant_(self.weight[:, :2], 1.4142135623730951)
             init.zeros_(self.weight[:, 2])
             init.zeros_(self.bias)
-
+            
 
 class ComplexBatchNorm2d(_ComplexBatchNorm):
     def forward(self, inp):
@@ -325,7 +327,8 @@ class ComplexBatchNorm2d(_ComplexBatchNorm):
             if self.num_batches_tracked is not None:
                 self.num_batches_tracked += 1
                 if self.momentum is None:  # use cumulative moving average
-                    exponential_average_factor = 1.0 / float(self.num_batches_tracked)
+                    exponential_average_factor = 1.0 / \
+                        float(self.num_batches_tracked)
                 else:  # use exponential moving average
                     exponential_average_factor = self.momentum
 
@@ -405,7 +408,6 @@ class ComplexBatchNorm2d(_ComplexBatchNorm):
             ).type(
                 torch.complex64
             )
-
         return inp
 
 
@@ -418,7 +420,8 @@ class ComplexBatchNorm1d(_ComplexBatchNorm):
             if self.num_batches_tracked is not None:
                 self.num_batches_tracked += 1
                 if self.momentum is None:  # use cumulative moving average
-                    exponential_average_factor = 1.0 / float(self.num_batches_tracked)
+                    exponential_average_factor = 1.0 / \
+                        float(self.num_batches_tracked)
                 else:  # use exponential moving average
                     exponential_average_factor = self.momentum
 
@@ -500,26 +503,32 @@ class ComplexBatchNorm1d(_ComplexBatchNorm):
         return inp
 
 
+
 class ComplexGRUCell(Module):
     """
     A GRU cell for complex-valued inputs
     """
-
-    def __init__(self, inp_length=10, hidden_length=20):
-        super(ComplexGRUCell, self).__init__()
-        self.inp_length = inp_length
+    def __init__(self, input_length, hidden_length):
+        super().__init__()
+        self.input_length = input_length
         self.hidden_length = hidden_length
 
         # reset gate components
-        self.linear_reset_w1 = ComplexLinear(self.inp_length, self.hidden_length)
-        self.linear_reset_r1 = ComplexLinear(self.hidden_length, self.hidden_length)
+        self.linear_reset_w1 = ComplexLinear(
+            self.input_length, self.hidden_length)
+        self.linear_reset_r1 = ComplexLinear(
+            self.hidden_length, self.hidden_length)
 
-        self.linear_reset_w2 = ComplexLinear(self.inp_length, self.hidden_length)
-        self.linear_reset_r2 = ComplexLinear(self.hidden_length, self.hidden_length)
+        self.linear_reset_w2 = ComplexLinear(
+            self.input_length, self.hidden_length)
+        self.linear_reset_r2 = ComplexLinear(
+            self.hidden_length, self.hidden_length)
 
         # update gate components
-        self.linear_gate_w3 = ComplexLinear(self.inp_length, self.hidden_length)
-        self.linear_gate_r3 = ComplexLinear(self.hidden_length, self.hidden_length)
+        self.linear_gate_w3 = ComplexLinear(
+            self.input_length, self.hidden_length)
+        self.linear_gate_r3 = ComplexLinear(
+            self.hidden_length, self.hidden_length)
 
         self.activation_gate = ComplexSigmoid()
         self.activation_candidate = ComplexTanh()
@@ -555,7 +564,6 @@ class ComplexGRUCell(Module):
 
         # Equation 4: the new hidden state
         h_new = (1 + complex_opposite(z)) * n + z * h  # element-wise multiplication
-
         return h_new
 
 
@@ -563,22 +571,28 @@ class ComplexBNGRUCell(Module):
     """
     A BN-GRU cell for complex-valued inputs
     """
-
-    def __init__(self, inp_length=10, hidden_length=20):
-        super(ComplexBNGRUCell, self).__init__()
-        self.inp_length = inp_length
+    
+    def __init__(self, input_length=10, hidden_length=20):
+        super().__init__()
+        self.input_length = input_length
         self.hidden_length = hidden_length
 
         # reset gate components
-        self.linear_reset_w1 = ComplexLinear(self.inp_length, self.hidden_length)
-        self.linear_reset_r1 = ComplexLinear(self.hidden_length, self.hidden_length)
+        self.linear_reset_w1 = ComplexLinear(
+            self.input_length, self.hidden_length)
+        self.linear_reset_r1 = ComplexLinear(
+            self.hidden_length, self.hidden_length)
 
-        self.linear_reset_w2 = ComplexLinear(self.inp_length, self.hidden_length)
-        self.linear_reset_r2 = ComplexLinear(self.hidden_length, self.hidden_length)
+        self.linear_reset_w2 = ComplexLinear(
+            self.input_length, self.hidden_length)
+        self.linear_reset_r2 = ComplexLinear(
+            self.hidden_length, self.hidden_length)
 
         # update gate components
-        self.linear_gate_w3 = ComplexLinear(self.inp_length, self.hidden_length)
-        self.linear_gate_r3 = ComplexLinear(self.hidden_length, self.hidden_length)
+        self.linear_gate_w3 = ComplexLinear(
+            self.input_length, self.hidden_length)
+        self.linear_gate_r3 = ComplexLinear(
+            self.hidden_length, self.hidden_length)
 
         self.activation_gate = ComplexSigmoid()
         self.activation_candidate = ComplexTanh()
@@ -615,6 +629,112 @@ class ComplexBNGRUCell(Module):
         n = self.update_component(x, h, r)
 
         # Equation 4: the new hidden state
+
+
+class ComplexGRU(Module):
+    def __init__(self, input_size, hidden_size, num_layers=1, bias=True,
+                 batch_first=False, dropout=0, bidirectional=False):
+        super().__init__()
+
+        self.gru_re = GRU(input_size=input_size, hidden_size=hidden_size,
+                            num_layers=num_layers, bias=bias,
+                            batch_first=batch_first, dropout=dropout,
+                            bidirectional=bidirectional)
+        self.gru_im = GRU(input_size=input_size, hidden_size=hidden_size,
+                            num_layers=num_layers, bias=bias,
+                            batch_first=batch_first, dropout=dropout,
+                            bidirectional=bidirectional)
+
+    def forward(self, x):
+        real, state_real = self._forward_real(x)
+        imaginary, state_imag = self._forward_imaginary(x)
+
+        output = torch.complex(real, imaginary)
+        state = torch.complex(state_real, state_imag)
+
+        return output, state
+
+    def forward(self, x):
+        r2r_out = self.gru_re(x.real)[0]
+        r2i_out = self.gru_im(x.real)[0]
+        i2r_out = self.gru_re(x.imag)[0]
+        i2i_out = self.gru_im(x.imag)[0]
+        real_out = r2r_out - i2i_out
+        imag_out = i2r_out + r2i_out 
+
+        return torch.complex(real_out, imag_out), None
+
+    def _forward_real(self, x):
+        real_real, h_real = self.gru_re(x.real)
+        imag_imag, h_imag = self.gru_im(x.imag)
+        real = real_real - imag_imag
+
+        return real, torch.complex(h_real, h_imag)
+
+    def _forward_imaginary(self, x):
+        imag_real, h_real = self.gru_re(x.imag)
+        real_imag, h_imag = self.gru_im(x.real)
+        imaginary = imag_real + real_imag
+
+        return imaginary, torch.complex(h_real, h_imag)
+
+
+class ComplexLSTM(Module):
+    def __init__(self, input_size, hidden_size, num_layers=1, bias=True,
+                 batch_first=False, dropout=0, bidirectional=False):
+        super().__init__()
+        self.num_layer = num_layers
+        self.hidden_size = hidden_size
+        self.batch_dim = 0 if batch_first else 1
+        self.bidirectional = bidirectional
+
+        self.lstm_re = LSTM(input_size=input_size, hidden_size=hidden_size,
+                            num_layers=num_layers, bias=bias,
+                            batch_first=batch_first, dropout=dropout,
+                            bidirectional=bidirectional)
+        self.lstm_im = LSTM(input_size=input_size, hidden_size=hidden_size,
+                            num_layers=num_layers, bias=bias,
+                            batch_first=batch_first, dropout=dropout,
+                            bidirectional=bidirectional)
+    def forward(self, x):
+        real, state_real = self._forward_real(x)
+        imaginary, state_imag = self._forward_imaginary(x)
+
+        output = torch.complex(real, imaginary)
+
+        return output, (state_real, state_imag)
+
+    def _forward_real(self, x):
+        h_real, h_imag, c_real, c_imag = self._init_state(self._get_batch_size(x), x.is_cuda)
+        real_real, (h_real, c_real) = self.lstm_re(x.real, (h_real, c_real))
+        imag_imag, (h_imag, c_imag) = self.lstm_im(x.imag, (h_imag, c_imag))
+        real = real_real - imag_imag
+        return real, ((h_real, c_real), (h_imag, c_imag))
+
+    def _forward_imaginary(self, x):
+        h_real, h_imag, c_real, c_imag = self._init_state(self._get_batch_size(x), x.is_cuda)
+        imag_real, (h_real, c_real) = self.lstm_re(x.imag, (h_real, c_real))
+        real_imag, (h_imag, c_imag) = self.lstm_im(x.real, (h_imag, c_imag))
+        imaginary = imag_real + real_imag
+
+        return imaginary, ((h_real, c_real), (h_imag, c_imag))
+
+    def _init_state(self, batch_size, to_gpu=False):
+        dim_0 = 2 if self.bidirectional else 1
+        dims = (dim_0, batch_size, self.hidden_size)
+
+        h_real, h_imag, c_real, c_imag = [
+            torch.zeros(dims) for i in range(4)]
+
+        if to_gpu:
+            h_real, h_imag, c_real, c_imag = [
+                t.cuda() for t in [h_real, h_imag, c_real, c_imag]]
+            
+
+        return h_real, h_imag, c_real, c_imag
+    
+    def _get_batch_size(self, x):
+        return x.size(self.batch_dim)
         h_new = (1 + complex_opposite(z)) * n + z * h  # element-wise multiplication
 
         return h_new

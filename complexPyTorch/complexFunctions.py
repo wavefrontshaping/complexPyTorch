@@ -18,6 +18,10 @@ from torch.nn.functional import (
 )
 
 
+from torch.nn.functional import max_pool2d, avg_pool2d, dropout, dropout2d, interpolate
+from torch import tanh, relu, sigmoid
+
+
 def complex_matmul(A, B):
     """
     Performs the matrix product between two complex matrices
@@ -48,7 +52,6 @@ def complex_normalize(inp):
     real_value, imag_value = inp.real, inp.imag
     real_norm = (real_value - real_value.mean()) / real_value.std()
     imag_norm = (imag_value - imag_value.mean()) / imag_value.std()
-
     return real_norm.type(torch.complex64) + 1j * imag_norm.type(torch.complex64)
 
 
