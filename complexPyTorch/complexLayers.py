@@ -24,7 +24,6 @@ def apply_complex(fr, fi, inp, dtype=torch.complex64):
         fr(inp.imag) + fi(inp.real)
     ).type(dtype)
 
-
 class ComplexDropout(Module):
     def __init__(self, p=0.5):
         super(ComplexDropout, self).__init__()
