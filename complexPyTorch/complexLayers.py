@@ -8,6 +8,7 @@ Created on Tue Mar 19 10:30:02 2019
 
 Based on https://openreview.net/forum?id=H1T2hmZAb
 """
+from typing import Optional
 
 import torch
 from torch.nn import (
@@ -43,26 +44,33 @@ class ComplexDropout(Module):
         if self.training:
             return complex_dropout(input, self.p)
         else:
-            return input
+            return inp
+
 
 
 class ComplexDropout2d(Module):
     def __init__(self, p=0.5):
-        super().__init__()
+        super(ComplexDropout2d, self).__init__()
         self.p = p
 
-    def forward(self, input):
+    def forward(self, inp):
         if self.training:
-            return complex_dropout2d(input, self.p)
+            return complex_dropout2d(inp, self.p)
         else:
-            return input
+            return inp
 
 
 class ComplexMaxPool2d(Module):
-
-    def __init__(self, kernel_size, stride=None, padding=0,
-                 dilation=1, return_indices=False, ceil_mode=False):
-        super().__init__()
+    def __init__(
+        self,
+        kernel_size,
+        stride=None,
+        padding=0,
+        dilation=1,
+        return_indices=False,
+        ceil_mode=False,
+    ):
+        super(ComplexMaxPool2d, self).__init__()
         self.kernel_size = kernel_size
         self.stride = stride
         self.padding = padding
@@ -70,59 +78,78 @@ class ComplexMaxPool2d(Module):
         self.ceil_mode = ceil_mode
         self.return_indices = return_indices
 
-    def forward(self, input):
-        return complex_max_pool2d(input, kernel_size=self.kernel_size,
-                                  stride=self.stride, padding=self.padding,
-                                  dilation=self.dilation, ceil_mode=self.ceil_mode,
-                                  return_indices=self.return_indices)
+    def forward(self, inp):
+        return complex_max_pool2d(
+            inp,
+            kernel_size=self.kernel_size,
+            stride=self.stride,
+            padding=self.padding,
+            dilation=self.dilation,
+            ceil_mode=self.ceil_mode,
+            return_indices=self.return_indices,
+        )
 
-
-class ComplexAvgPool2d(Module):
-
-    def __init__(self, kernel_size, stride=None, padding=0,
-                 ceil_mode=False):
-        super().__init__()
+class ComplexAvgPool2d(torch.nn.Module):
+    
+    def __init__(self,kernel_size, stride= None, padding = 0,
+                 ceil_mode = False, count_include_pad = True, divisor_override = None):
+        super(ComplexAvgPool2d,self).__init__()
         self.kernel_size = kernel_size
         self.stride = stride
         self.padding = padding
         self.ceil_mode = ceil_mode
+        self.count_include_pad = count_include_pad
+        self.divisor_override = divisor_override
+        
+    def forward(self,inp):
+        return complex_avg_pool2d(inp,kernel_size = self.kernel_size,
+                                stride = self.stride, padding = self.padding,
+                                ceil_mode = self.ceil_mode, count_include_pad = self.count_include_pad,
+                                divisor_override = self.divisor_override)
 
-    def forward(self, input):
-        return complex_avg_pool2d(input, kernel_size=self.kernel_size,
-                                  stride=self.stride, padding=self.padding,
-                                  ceil_mode=self.ceil_mode)
-
-
+      
 class ComplexReLU(Module):
-    def forward(self, input):
-        return complex_relu(input)
+    @staticmethod
+    def forward(inp):
+        return complex_relu(inp)
 
 
 class ComplexSigmoid(Module):
-    def forward(self, input):
-        return complex_sigmoid(input)
-
-
-class ComplexTanh(Module):
-    def forward(self, input):
-        return complex_tanh(input)
-
-
+    @staticmethod
+    def forward(inp):
+        return complex_sigmoid(inp)
+      
 class ComplexPReLU(Module):
     def __init__(self):
         super().__init__()
         self.r_prelu = PReLU()        
         self.i_prelu = PReLU()
 
+    @staticmethod
+    def forward(self, inp):
+        return self.r_prelu(inp.real) + 1j*self.i_prelu(inp.imag)
 
-    def forward(self, input):
-        return self.r_prelu(input.real) + 1j*self.i_prelu(input.imag)
-        
+
+class ComplexTanh(Module):
+    @staticmethod
+    def forward(inp):
+        return complex_tanh(inp)
+
 
 class ComplexConvTranspose2d(Module):
-
-    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0,
-                 output_padding=0, groups=1, bias=True, dilation=1, padding_mode='zeros'):
+    def __init__(
+        self,
+        in_channels,
+        out_channels,
+        kernel_size,
+        stride=1,
+        padding=0,
+        output_padding=0,
+        groups=1,
+        bias=True,
+        dilation=1,
+        padding_mode="zeros",
+    ):
 
         super().__init__()
 
@@ -131,74 +158,124 @@ class ComplexConvTranspose2d(Module):
         self.conv_tran_i = ConvTranspose2d(in_channels, out_channels, kernel_size, stride, padding,
                                            output_padding, groups, bias, dilation, padding_mode)
 
-    def forward(self, input):
-        return apply_complex(self.conv_tran_r, self.conv_tran_i, input)
+    def forward(self, inp):
+        return apply_complex(self.conv_tran_r, self.conv_tran_i, inp)
 
 
 class ComplexConv2d(Module):
+    def __init__(
+        self,
+        in_channels,
+        out_channels,
+        kernel_size=3,
+        stride=1,
+        padding=0,
+        dilation=1,
+        groups=1,
+        bias=True,
+    ):
+        super(ComplexConv2d, self).__init__()
+        self.conv_r = Conv2d(
+            in_channels,
+            out_channels,
+            kernel_size,
+            stride,
+            padding,
+            dilation,
+            groups,
+            bias,
+        )
+        self.conv_i = Conv2d(
+            in_channels,
+            out_channels,
+            kernel_size,
+            stride,
+            padding,
+            dilation,
+            groups,
+            bias,
+        )
 
-    def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=0,
-                 dilation=1, groups=1, bias=True):
-        super().__init__()
-        self.conv_r = Conv2d(in_channels, out_channels,
-                             kernel_size, stride, padding, dilation, groups, bias)
-        self.conv_i = Conv2d(in_channels, out_channels,
-                             kernel_size, stride, padding, dilation, groups, bias)
-
-    def forward(self, input):
-        return apply_complex(self.conv_r, self.conv_i, input)
+    def forward(self, inp):
+        return apply_complex(self.conv_r, self.conv_i, inp)
 
 
 class ComplexLinear(Module):
-
     def __init__(self, in_features, out_features):
         super().__init__()
         self.fc_r = Linear(in_features, out_features)
         self.fc_i = Linear(in_features, out_features)
 
-    def forward(self, input):
-        return apply_complex(self.fc_r, self.fc_i, input)
+    def forward(self, inp):
+        return apply_complex(self.fc_r, self.fc_i, inp)
 
 
 class NaiveComplexBatchNorm1d(Module):
-    '''
+    """
     Naive approach to complex batch norm, perform batch norm independently on real and imaginary part.
-    '''
+    """
 
-    def __init__(self, num_features, eps=1e-5, momentum=0.1, affine=True,
-                 track_running_stats=True):
-        super().__init__()
+    def __init__(
+        self,
+        num_features,
+        eps=1e-5,
+        momentum=0.1,
+        affine=True,
+        track_running_stats=True,
+    ):
+        super(NaiveComplexBatchNorm1d, self).__init__()
         self.bn_r = BatchNorm1d(
-            num_features, eps, momentum, affine, track_running_stats)
+            num_features, eps, momentum, affine, track_running_stats
+        )
         self.bn_i = BatchNorm1d(
-            num_features, eps, momentum, affine, track_running_stats)
+            num_features, eps, momentum, affine, track_running_stats
+        )
 
-    def forward(self, input):
-        return self.bn_r(input.real).type(torch.complex64) + 1j*self.bn_i(input.imag).type(torch.complex64)
+    def forward(self, inp):
+        return self.bn_r(inp.real).type(torch.complex64) + 1j * self.bn_i(
+            inp.imag
+        ).type(torch.complex64)
 
 
 class NaiveComplexBatchNorm2d(Module):
-    '''
+    """
     Naive approach to complex batch norm, perform batch norm independently on real and imaginary part.
-    '''
+    """
 
-    def __init__(self, num_features, eps=1e-5, momentum=0.1, affine=True,
-                 track_running_stats=True):
+    def __init__(
+        self,
+        num_features,
+        eps=1e-5,
+        momentum=0.1,
+        affine=True,
+        track_running_stats=True,
+    ):
         super(NaiveComplexBatchNorm2d, self).__init__()
         self.bn_r = BatchNorm2d(
-            num_features, eps, momentum, affine, track_running_stats)
+            num_features, eps, momentum, affine, track_running_stats
+        )
         self.bn_i = BatchNorm2d(
-            num_features, eps, momentum, affine, track_running_stats)
+            num_features, eps, momentum, affine, track_running_stats
+        )
 
-    def forward(self, input):
-        return self.bn_r(input.real).type(torch.complex64) + 1j*self.bn_i(input.imag).type(torch.complex64)
+    def forward(self, inp):
+        return self.bn_r(inp.real).type(torch.complex64) + 1j * self.bn_i(
+            inp.imag
+        ).type(torch.complex64)
 
 
 class _ComplexBatchNorm(Module):
+    running_mean: Optional[torch.Tensor]
 
-    def __init__(self, num_features, eps=1e-5, momentum=0.1, affine=True,
-                 track_running_stats=True):
-        super().__init__()
+    def __init__(
+        self,
+        num_features,
+        eps=1e-5,
+        momentum=0.1,
+        affine=True,
+        track_running_stats=True,
+    ):
+        super(_ComplexBatchNorm, self).__init__()
         self.num_features = num_features
         self.eps = eps
         self.momentum = momentum
@@ -208,20 +285,22 @@ class _ComplexBatchNorm(Module):
             self.weight = Parameter(torch.Tensor(num_features, 3))
             self.bias = Parameter(torch.Tensor(num_features, 2))
         else:
-            self.register_parameter('weight', None)
-            self.register_parameter('bias', None)
+            self.register_parameter("weight", None)
+            self.register_parameter("bias", None)
         if self.track_running_stats:
-            self.register_buffer('running_mean', torch.zeros(
-                num_features, dtype=torch.complex64))
-            self.register_buffer('running_covar', torch.zeros(num_features, 3))
+            self.register_buffer(
+                "running_mean", torch.zeros(num_features, dtype=torch.complex64)
+            )
+            self.register_buffer("running_covar", torch.zeros(num_features, 3))
             self.running_covar[:, 0] = 1.4142135623730951
             self.running_covar[:, 1] = 1.4142135623730951
-            self.register_buffer('num_batches_tracked',
-                                 torch.tensor(0, dtype=torch.long))
+            self.register_buffer(
+                "num_batches_tracked", torch.tensor(0, dtype=torch.long)
+            )
         else:
-            self.register_parameter('running_mean', None)
-            self.register_parameter('running_covar', None)
-            self.register_parameter('num_batches_tracked', None)
+            self.register_parameter("running_mean", None)
+            self.register_parameter("running_covar", None)
+            self.register_parameter("num_batches_tracked", None)
         self.reset_parameters()
 
     def reset_running_stats(self):
@@ -238,11 +317,10 @@ class _ComplexBatchNorm(Module):
             init.constant_(self.weight[:, :2], 1.4142135623730951)
             init.zeros_(self.weight[:, 2])
             init.zeros_(self.bias)
-
+            
 
 class ComplexBatchNorm2d(_ComplexBatchNorm):
-
-    def forward(self, input):
+    def forward(self, inp):
         exponential_average_factor = 0.0
 
         if self.training and self.track_running_stats:
@@ -254,73 +332,87 @@ class ComplexBatchNorm2d(_ComplexBatchNorm):
                 else:  # use exponential moving average
                     exponential_average_factor = self.momentum
 
-        if self.training or (not self.training and not self.track_running_stats):
+        if self.training or (not self.track_running_stats):
             # calculate mean of real and imaginary part
             # mean does not support automatic differentiation for outputs with complex dtype.
-            mean_r = input.real.mean([0, 2, 3]).type(torch.complex64)
-            mean_i = input.imag.mean([0, 2, 3]).type(torch.complex64)
-            mean = mean_r + 1j*mean_i
+            mean_r = inp.real.mean([0, 2, 3]).type(torch.complex64)
+            mean_i = inp.imag.mean([0, 2, 3]).type(torch.complex64)
+            mean = mean_r + 1j * mean_i
         else:
             mean = self.running_mean
 
         if self.training and self.track_running_stats:
             # update running mean
             with torch.no_grad():
-                self.running_mean = exponential_average_factor * mean\
+                self.running_mean = (
+                    exponential_average_factor * mean
                     + (1 - exponential_average_factor) * self.running_mean
+                )
 
-        input = input - mean[None, :, None, None]
+        inp = inp - mean[None, :, None, None]
 
-        if self.training or (not self.training and not self.track_running_stats):
+        if self.training or (not self.track_running_stats):
             # Elements of the covariance matrix (biased for train)
-            n = input.numel() / input.size(1)
-            Crr = 1./n*input.real.pow(2).sum(dim=[0, 2, 3])+self.eps
-            Cii = 1./n*input.imag.pow(2).sum(dim=[0, 2, 3])+self.eps
-            Cri = (input.real.mul(input.imag)).mean(dim=[0, 2, 3])
+            n = inp.numel() / inp.size(1)
+            Crr = 1.0 / n * inp.real.pow(2).sum(dim=[0, 2, 3]) + self.eps
+            Cii = 1.0 / n * inp.imag.pow(2).sum(dim=[0, 2, 3]) + self.eps
+            Cri = (inp.real.mul(inp.imag)).mean(dim=[0, 2, 3])
         else:
-            Crr = self.running_covar[:, 0]+self.eps
-            Cii = self.running_covar[:, 1]+self.eps
+            Crr = self.running_covar[:, 0] + self.eps
+            Cii = self.running_covar[:, 1] + self.eps
             Cri = self.running_covar[:, 2]  # +self.eps
 
         if self.training and self.track_running_stats:
             with torch.no_grad():
-                self.running_covar[:, 0] = exponential_average_factor * Crr * n / (n - 1)\
-                    + (1 - exponential_average_factor) * \
-                    self.running_covar[:, 0]
+                self.running_covar[:, 0] = (
+                    exponential_average_factor * Crr * n / (n - 1)  #
+                    + (1 - exponential_average_factor) * self.running_covar[:, 0]
+                )
 
-                self.running_covar[:, 1] = exponential_average_factor * Cii * n / (n - 1)\
-                    + (1 - exponential_average_factor) * \
-                    self.running_covar[:, 1]
+                self.running_covar[:, 1] = (
+                    exponential_average_factor * Cii * n / (n - 1)
+                    + (1 - exponential_average_factor) * self.running_covar[:, 1]
+                )
 
-                self.running_covar[:, 2] = exponential_average_factor * Cri * n / (n - 1)\
-                    + (1 - exponential_average_factor) * \
-                    self.running_covar[:, 2]
+                self.running_covar[:, 2] = (
+                    exponential_average_factor * Cri * n / (n - 1)
+                    + (1 - exponential_average_factor) * self.running_covar[:, 2]
+                )
 
         # calculate the inverse square root the covariance matrix
-        det = Crr*Cii-Cri.pow(2)
+        det = Crr * Cii - Cri.pow(2)
         s = torch.sqrt(det)
-        t = torch.sqrt(Cii+Crr + 2 * s)
+        t = torch.sqrt(Cii + Crr + 2 * s)
         inverse_st = 1.0 / (s * t)
         Rrr = (Cii + s) * inverse_st
         Rii = (Crr + s) * inverse_st
         Rri = -Cri * inverse_st
 
-        input = (Rrr[None, :, None, None]*input.real+Rri[None, :, None, None]*input.imag).type(torch.complex64) \
-            + 1j*(Rii[None, :, None, None]*input.imag+Rri[None,
-                  :, None, None]*input.real).type(torch.complex64)
+        inp = (
+            Rrr[None, :, None, None] * inp.real + Rri[None, :, None, None] * inp.imag
+        ).type(torch.complex64) + 1j * (
+            Rii[None, :, None, None] * inp.imag + Rri[None, :, None, None] * inp.real
+        ).type(
+            torch.complex64
+        )
 
         if self.affine:
-            input = (self.weight[None, :, 0, None, None]*input.real+self.weight[None, :, 2, None, None]*input.imag +
-                     self.bias[None, :, 0, None, None]).type(torch.complex64) \
-                + 1j*(self.weight[None, :, 2, None, None]*input.real+self.weight[None, :, 1, None, None]*input.imag +
-                      self.bias[None, :, 1, None, None]).type(torch.complex64)
-
-        return input
+            inp = (
+                self.weight[None, :, 0, None, None] * inp.real
+                + self.weight[None, :, 2, None, None] * inp.imag
+                + self.bias[None, :, 0, None, None]
+            ).type(torch.complex64) + 1j * (
+                self.weight[None, :, 2, None, None] * inp.real
+                + self.weight[None, :, 1, None, None] * inp.imag
+                + self.bias[None, :, 1, None, None]
+            ).type(
+                torch.complex64
+            )
+        return inp
 
 
 class ComplexBatchNorm1d(_ComplexBatchNorm):
-
-    def forward(self, input):
+    def forward(self, inp):
 
         exponential_average_factor = 0.0
 
@@ -333,71 +425,89 @@ class ComplexBatchNorm1d(_ComplexBatchNorm):
                 else:  # use exponential moving average
                     exponential_average_factor = self.momentum
 
-        if self.training or (not self.training and not self.track_running_stats):
+        if self.training or (not self.track_running_stats):
             # calculate mean of real and imaginary part
-            mean_r = input.real.mean(dim=0).type(torch.complex64)
-            mean_i = input.imag.mean(dim=0).type(torch.complex64)
-            mean = mean_r + 1j*mean_i
+            mean_r = inp.real.mean(dim=0).type(torch.complex64)
+            mean_i = inp.imag.mean(dim=0).type(torch.complex64)
+            mean = mean_r + 1j * mean_i
         else:
             mean = self.running_mean
 
         if self.training and self.track_running_stats:
             # update running mean
             with torch.no_grad():
-                self.running_mean = exponential_average_factor * mean\
+                self.running_mean = (
+                    exponential_average_factor * mean
                     + (1 - exponential_average_factor) * self.running_mean
+                )
 
-        input = input - mean[None, ...]
+        inp = inp - mean[None, ...]
 
-        if self.training or (not self.training and not self.track_running_stats):
+        if self.training or (not self.track_running_stats):
             # Elements of the covariance matrix (biased for train)
-            n = input.numel() / input.size(1)
-            Crr = input.real.var(dim=0, unbiased=False)+self.eps
-            Cii = input.imag.var(dim=0, unbiased=False)+self.eps
-            Cri = (input.real.mul(input.imag)).mean(dim=0)
+            n = inp.numel() / inp.size(1)
+            Crr = inp.real.var(dim=0, unbiased=False) + self.eps
+            Cii = inp.imag.var(dim=0, unbiased=False) + self.eps
+            Cri = (inp.real.mul(inp.imag)).mean(dim=0)
         else:
-            Crr = self.running_covar[:, 0]+self.eps
-            Cii = self.running_covar[:, 1]+self.eps
+            Crr = self.running_covar[:, 0] + self.eps
+            Cii = self.running_covar[:, 1] + self.eps
             Cri = self.running_covar[:, 2]
 
         if self.training and self.track_running_stats:
-            self.running_covar[:, 0] = exponential_average_factor * Crr * n / (n - 1)\
-                + (1 - exponential_average_factor) * self.running_covar[:, 0]
+            with torch.no_grad():
+                self.running_covar[:, 0] = (
+                    exponential_average_factor * Crr * n / (n - 1)
+                    + (1 - exponential_average_factor) * self.running_covar[:, 0]
+                )
 
-            self.running_covar[:, 1] = exponential_average_factor * Cii * n / (n - 1)\
-                + (1 - exponential_average_factor) * self.running_covar[:, 1]
+                self.running_covar[:, 1] = (
+                    exponential_average_factor * Cii * n / (n - 1)
+                    + (1 - exponential_average_factor) * self.running_covar[:, 1]
+                )
 
-            self.running_covar[:, 2] = exponential_average_factor * Cri * n / (n - 1)\
-                + (1 - exponential_average_factor) * self.running_covar[:, 2]
+                self.running_covar[:, 2] = (
+                    exponential_average_factor * Cri * n / (n - 1)
+                    + (1 - exponential_average_factor) * self.running_covar[:, 2]
+                )
 
         # calculate the inverse square root the covariance matrix
-        det = Crr*Cii-Cri.pow(2)
+        det = Crr * Cii - Cri.pow(2)
         s = torch.sqrt(det)
-        t = torch.sqrt(Cii+Crr + 2 * s)
+        t = torch.sqrt(Cii + Crr + 2 * s)
         inverse_st = 1.0 / (s * t)
         Rrr = (Cii + s) * inverse_st
         Rii = (Crr + s) * inverse_st
         Rri = -Cri * inverse_st
 
-        input = (Rrr[None, :]*input.real+Rri[None, :]*input.imag).type(torch.complex64) \
-            + 1j*(Rii[None, :]*input.imag+Rri[None, :]
-                  * input.real).type(torch.complex64)
+        inp = (Rrr[None, :] * inp.real + Rri[None, :] * inp.imag).type(
+            torch.complex64
+        ) + 1j * (Rii[None, :] * inp.imag + Rri[None, :] * inp.real).type(
+            torch.complex64
+        )
 
         if self.affine:
-            input = (self.weight[None, :, 0]*input.real+self.weight[None, :, 2]*input.imag +
-                     self.bias[None, :, 0]).type(torch.complex64) \
-                + 1j*(self.weight[None, :, 2]*input.real+self.weight[None, :, 1]*input.imag +
-                      self.bias[None, :, 1]).type(torch.complex64)
+            inp = (
+                self.weight[None, :, 0] * inp.real
+                + self.weight[None, :, 2] * inp.imag
+                + self.bias[None, :, 0]
+            ).type(torch.complex64) + 1j * (
+                self.weight[None, :, 2] * inp.real
+                + self.weight[None, :, 1] * inp.imag
+                + self.bias[None, :, 1]
+            ).type(
+                torch.complex64
+            )
 
         del Crr, Cri, Cii, Rrr, Rii, Rri, det, s, t
-        return input
+        return inp
+
 
 
 class ComplexGRUCell(Module):
     """
     A GRU cell for complex-valued inputs
     """
-
     def __init__(self, input_length, hidden_length):
         super().__init__()
         self.input_length = input_length
@@ -453,9 +563,7 @@ class ComplexGRUCell(Module):
         n = self.update_component(x, h, r)
 
         # Equation 4: the new hidden state
-        h_new = (1 + complex_opposite(z)) * n + \
-            z * h  # element-wise multiplication
-
+        h_new = (1 + complex_opposite(z)) * n + z * h  # element-wise multiplication
         return h_new
 
 
@@ -463,7 +571,7 @@ class ComplexBNGRUCell(Module):
     """
     A BN-GRU cell for complex-valued inputs
     """
-
+    
     def __init__(self, input_length=10, hidden_length=20):
         super().__init__()
         self.input_length = input_length
@@ -506,8 +614,7 @@ class ComplexBNGRUCell(Module):
 
     def update_component(self, x, h, r):
         x_3 = self.linear_gate_w3(x)
-        # element-wise multiplication
-        h_3 = r * self.bn(self.linear_gate_r3(h))
+        h_3 = r * self.bn(self.linear_gate_r3(h))  # element-wise multiplication
         gate_update = self.activation_candidate(self.bn(self.bn(x_3) + h_3))
         return gate_update
 
@@ -522,10 +629,6 @@ class ComplexBNGRUCell(Module):
         n = self.update_component(x, h, r)
 
         # Equation 4: the new hidden state
-        h_new = (1 + complex_opposite(z)) * n + \
-            z * h  # element-wise multiplication
-
-        return h_new
 
 
 class ComplexGRU(Module):
@@ -632,3 +735,6 @@ class ComplexLSTM(Module):
     
     def _get_batch_size(self, x):
         return x.size(self.batch_dim)
+        h_new = (1 + complex_opposite(z)) * n + z * h  # element-wise multiplication
+
+        return h_new
