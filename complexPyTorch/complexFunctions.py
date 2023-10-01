@@ -6,8 +6,16 @@
 """
 
 import torch
-from torch.nn.functional import (avg_pool2d, dropout, dropout2d, interpolate,
-                                 max_pool2d, relu, sigmoid, tanh)
+from torch.nn.functional import (
+    avg_pool2d,
+    dropout,
+    dropout2d,
+    interpolate,
+    max_pool2d,
+    relu,
+    sigmoid,
+    tanh,
+)
 
 
 def complex_matmul(A, B):
@@ -181,20 +189,11 @@ def complex_max_pool2d(
         + 1j * torch.sin(angle).type(torch.complex64)
     )
 
-def complex_dropout(input, p=0.5, training=True):
-    # need to have the same dropout mask for real and imaginary part, 
-    # this not a clean solution!
-    device = input.device
-    mask = torch.ones(*input.shape, dtype = torch.float32, device = device)
-    mask = dropout(mask, p, training)*1/(1-p)
-    mask.type(input.dtype)
-    return mask*input
-
 
 def complex_dropout(inp, p=0.5, training=True):
     # need to have the same dropout mask for real and imaginary part,
     # this not a clean solution!
-    mask = torch.ones(*inp.shape, dtype=torch.float32)
+    mask = torch.ones(*inp.shape, dtype=torch.float32, device=inp.device)
     mask = dropout(mask, p, training) * 1 / (1 - p)
     mask.type(inp.dtype)
     return mask * inp
@@ -203,7 +202,7 @@ def complex_dropout(inp, p=0.5, training=True):
 def complex_dropout2d(inp, p=0.5, training=True):
     # need to have the same dropout mask for real and imaginary part,
     # this not a clean solution!
-    mask = torch.ones(*inp.shape, dtype=torch.float32)
+    mask = torch.ones(*inp.shape, dtype=torch.float32, device=inp.device)
     mask = dropout2d(mask, p, training) * 1 / (1 - p)
     mask.type(inp.dtype)
     return mask * inp
