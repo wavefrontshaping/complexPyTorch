@@ -44,7 +44,7 @@ class ComplexDropout(Module):
         if self.training:
             return complex_dropout(input, self.p)
         else:
-            return inp
+            return input
 
 
 
@@ -57,7 +57,7 @@ class ComplexDropout2d(Module):
         if self.training:
             return complex_dropout2d(inp, self.p)
         else:
-            return inp
+            return input
 
 
 class ComplexMaxPool2d(Module):
@@ -222,6 +222,7 @@ class NaiveComplexBatchNorm1d(Module):
         momentum=0.1,
         affine=True,
         track_running_stats=True,
+        dtype=torch.complex64,
     ):
         super(NaiveComplexBatchNorm1d, self).__init__()
         self.bn_r = BatchNorm1d(
@@ -230,11 +231,12 @@ class NaiveComplexBatchNorm1d(Module):
         self.bn_i = BatchNorm1d(
             num_features, eps, momentum, affine, track_running_stats
         )
+        self.dtype = dtype
 
     def forward(self, inp):
-        return self.bn_r(inp.real).type(torch.complex64) + 1j * self.bn_i(
+        return self.bn_r(inp.real).type(self.dtype) + 1j * self.bn_i(
             inp.imag
-        ).type(torch.complex64)
+        ).type(self.dtype)
 
 
 class NaiveComplexBatchNorm2d(Module):
@@ -249,6 +251,7 @@ class NaiveComplexBatchNorm2d(Module):
         momentum=0.1,
         affine=True,
         track_running_stats=True,
+        dtype=torch.complex64
     ):
         super(NaiveComplexBatchNorm2d, self).__init__()
         self.bn_r = BatchNorm2d(
@@ -257,11 +260,12 @@ class NaiveComplexBatchNorm2d(Module):
         self.bn_i = BatchNorm2d(
             num_features, eps, momentum, affine, track_running_stats
         )
+        self.dtype=dtype
 
     def forward(self, inp):
-        return self.bn_r(inp.real).type(torch.complex64) + 1j * self.bn_i(
+        return self.bn_r(inp.real).type(self.dtype) + 1j * self.bn_i(
             inp.imag
-        ).type(torch.complex64)
+        ).type(self.dtype)
 
 
 class _ComplexBatchNorm(Module):
@@ -274,6 +278,7 @@ class _ComplexBatchNorm(Module):
         momentum=0.1,
         affine=True,
         track_running_stats=True,
+        dtype=torch.complex64
     ):
         super(_ComplexBatchNorm, self).__init__()
         self.num_features = num_features
@@ -281,6 +286,7 @@ class _ComplexBatchNorm(Module):
         self.momentum = momentum
         self.affine = affine
         self.track_running_stats = track_running_stats
+        self.dtype = dtype
         if self.affine:
             self.weight = Parameter(torch.Tensor(num_features, 3))
             self.bias = Parameter(torch.Tensor(num_features, 2))
@@ -289,7 +295,7 @@ class _ComplexBatchNorm(Module):
             self.register_parameter("bias", None)
         if self.track_running_stats:
             self.register_buffer(
-                "running_mean", torch.zeros(num_features, dtype=torch.complex64)
+                "running_mean", torch.zeros(num_features, dtype=self.dtype)
             )
             self.register_buffer("running_covar", torch.zeros(num_features, 3))
             self.running_covar[:, 0] = 1.4142135623730951
@@ -335,8 +341,8 @@ class ComplexBatchNorm2d(_ComplexBatchNorm):
         if self.training or (not self.track_running_stats):
             # calculate mean of real and imaginary part
             # mean does not support automatic differentiation for outputs with complex dtype.
-            mean_r = inp.real.mean([0, 2, 3]).type(torch.complex64)
-            mean_i = inp.imag.mean([0, 2, 3]).type(torch.complex64)
+            mean_r = inp.real.mean([0, 2, 3]).type(self.dtype)
+            mean_i = inp.imag.mean([0, 2, 3]).type(self.dtype)
             mean = mean_r + 1j * mean_i
         else:
             mean = self.running_mean
@@ -390,10 +396,10 @@ class ComplexBatchNorm2d(_ComplexBatchNorm):
 
         inp = (
             Rrr[None, :, None, None] * inp.real + Rri[None, :, None, None] * inp.imag
-        ).type(torch.complex64) + 1j * (
+        ).type(self.dtype) + 1j * (
             Rii[None, :, None, None] * inp.imag + Rri[None, :, None, None] * inp.real
         ).type(
-            torch.complex64
+            self.dtype
         )
 
         if self.affine:
@@ -401,12 +407,12 @@ class ComplexBatchNorm2d(_ComplexBatchNorm):
                 self.weight[None, :, 0, None, None] * inp.real
                 + self.weight[None, :, 2, None, None] * inp.imag
                 + self.bias[None, :, 0, None, None]
-            ).type(torch.complex64) + 1j * (
+            ).type(self.dtype) + 1j * (
                 self.weight[None, :, 2, None, None] * inp.real
                 + self.weight[None, :, 1, None, None] * inp.imag
                 + self.bias[None, :, 1, None, None]
             ).type(
-                torch.complex64
+                self.dtype
             )
         return inp
 
@@ -427,8 +433,8 @@ class ComplexBatchNorm1d(_ComplexBatchNorm):
 
         if self.training or (not self.track_running_stats):
             # calculate mean of real and imaginary part
-            mean_r = inp.real.mean(dim=0).type(torch.complex64)
-            mean_i = inp.imag.mean(dim=0).type(torch.complex64)
+            mean_r = inp.real.mean(dim=0).type(self.dtype)
+            mean_i = inp.imag.mean(dim=0).type(self.dtype)
             mean = mean_r + 1j * mean_i
         else:
             mean = self.running_mean
@@ -481,9 +487,9 @@ class ComplexBatchNorm1d(_ComplexBatchNorm):
         Rri = -Cri * inverse_st
 
         inp = (Rrr[None, :] * inp.real + Rri[None, :] * inp.imag).type(
-            torch.complex64
+            self.dtype
         ) + 1j * (Rii[None, :] * inp.imag + Rri[None, :] * inp.real).type(
-            torch.complex64
+            self.dtype
         )
 
         if self.affine:
@@ -491,12 +497,12 @@ class ComplexBatchNorm1d(_ComplexBatchNorm):
                 self.weight[None, :, 0] * inp.real
                 + self.weight[None, :, 2] * inp.imag
                 + self.bias[None, :, 0]
-            ).type(torch.complex64) + 1j * (
+            ).type(self.dtype) + 1j * (
                 self.weight[None, :, 2] * inp.real
                 + self.weight[None, :, 1] * inp.imag
                 + self.bias[None, :, 1]
             ).type(
-                torch.complex64
+                self.dtype
             )
 
         del Crr, Cri, Cii, Rrr, Rii, Rri, det, s, t
