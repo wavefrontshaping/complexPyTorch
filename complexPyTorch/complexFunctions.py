@@ -15,6 +15,7 @@ from torch.nn.functional import (
     relu,
     sigmoid,
     tanh,
+    softmax,
 )
 
 
@@ -209,3 +210,11 @@ def complex_dropout2d(inp, p=0.5, training=True):
     mask = dropout2d(mask, p, training) * 1 / (1 - p)
     mask.type(inp.dtype)
     return mask * inp
+
+def complex_softmax(inp, dim):
+    """
+    Perform complex softmax.
+    """
+    real_softmax = softmax(inp.real, dim=dim)
+    imag_softmax = softmax(inp.imag, dim=dim)
+    return real_softmax.type(torch.complex64) + 1j * imag_softmax.type(torch.complex64)

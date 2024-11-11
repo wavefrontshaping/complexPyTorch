@@ -27,6 +27,7 @@ Following [[C. Trabelsi et al., International Conference on Learning Representat
 * Relu (&#8450;Relu)
 * Sigmoid
 * Tanh
+* softmax
 * Dropout2d
 * BatchNorm1d (Naive and Covariance approach)
 * BatchNorm2d (Naive and Covariance approach)
